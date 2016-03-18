@@ -106,35 +106,6 @@ eval' t@(Var v) stack = unwind t stack
 unwind t [] = t
 unwind t (t1:rest) = unwind (A t $ eval t1) rest
 
--- ** Lambda-reductions as parsing without an explicit heterogeneous stack
-
--- Ken Shan wrote about his experience of using the above algorithm to
--- implement a lambda-calculator in Twelf for *typed* lambda-terms.  In
--- that case, the explicit stack of terms becomes a nuisance. Indeed, the
--- stack has to be a polymorphic, heterogeneous list, of a type (forall
--- t. [Term t]).
-
--- Ken Shan re-wrote the algorithm to elide the explicit stack. In
--- particular, his algorithm weaved the 'unwind' process into the eval
--- itself. His algorithm can be simplified to the following evaluation
--- rule:
-
--- -> eval t@(Var v) = t
--- -> eval (L v body) = check_eta $ L v (eval body)
--- -> eval (A (L v body) t2) = eval $ subst body v t2
--- -> eval (A t1@(A _ _) t2) = case eval t1 of
--- ->   r@(L _ _) -> eval (A r t2)
--- ->   r         -> A r $ eval t2 -- the head is normalized, but no redex
--- -> eval (A t1 t2) = A t1 $ eval t2
-
--- We can check whether unwinding is in progress simply by seeing whether
--- "r" is (not) an abstraction.  The stack is still there, but it is
--- implicit in the activation frames of eval. In contrast, eval' is "more
--- tail-recursive" (at least in the main branch), with the explicit
--- stack. Fortunately, Twelf is capable of a polymorphic recursion, which
--- is needed to effectively implement a polymorphic list as a sequence of
--- activation frames of a polymorphic function. Yet another example of
--- the practical need for polymorphic recursion!
 
 -- * beta-substitutions
 
