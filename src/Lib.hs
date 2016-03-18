@@ -33,25 +33,24 @@ data Term = Var VarName | A Term Term | L VarName Term
 
 -- * Normal-order reduction as parsing
 
--- The traditional recipe for normal-order reductions includes an unpleasant phrase
--- "cook until done". The phrase makes it necessary to keep track of reduction
--- attempts, and implies an ugly iterative algorithm. We're proposing what seems to
--- be efficient and elegant technique that can be implemented through intuitive
--- re-writing rules. Our calculator, like yacc, possesses a stack and works by
--- doing a sequence of 'shift' and 'reduce' steps. We consider an application (a b)
--- as a _delayed_ normalization. We delay dealing with 'b' and with the application
--- until we figure out what to do with the term 'a'.
+-- The traditional recipe for normal-order reductions includes an unpleasant
+-- phrase "cook until done". The phrase makes it necessary to keep track of
+-- reduction attempts, and implies an ugly iterative algorithm. We're proposing
+-- what seems to be efficient and elegant technique that can be implemented
+-- through intuitive re-writing rules. Our calculator possesses a stack and
+-- works by doing a sequence of 'shift' and 'reduce' steps. We consider an
+-- application (a b) as a _delayed_ normalization. We delay dealing with 'b' and
+-- with the application until we figure out what to do with the term 'a'.
 
 -- A sequence of applications (A (A (A t1 t2) t3) t4) is then a to-do list: terms
 -- t2, t3, and t4 are to be applied, in that order, to term t1.
 
--- The calculator's stack contains all the terms to be applied to the
--- current one. The evaluator does a 'reduce' step when it is sure it has
--- the redex or it is sure it does not (e.g., (x (\y. y)) where 'x' is
--- free). When the evaluator is not sure about the current term, it
--- 'shifts'. The only difference from yacc is that the lambda-calculator
--- "reparses" the result after the successful reduce step. The source and
--- the target languages of our "parser" (lambda-calculator) are the same;
+-- The calculator's stack contains all the terms to be applied to the current
+-- one. The evaluator does a 'reduce' step when it is sure it has the redex or
+-- it is sure it does not (e.g., (x (\y. y)) where 'x' is free). When the
+-- evaluator is not sure about the current term, it 'shifts'. The lambda
+-- calculator "reparses" the result after the successful reduce step. The source
+-- and the target languages of our "parser" (lambda-calculator) are the same;
 -- therefore, the parser can indeed apply itself.
 
 -- ** The main evaluator: evaluate a term as a top-level term
@@ -83,9 +82,6 @@ eval' (L v body) [] = check_eta $ L v (eval body)
 -- If the current term is a lambda form and the stack is non-empty, we
 -- have a (beta-) redex! We pop the stack, reduce (A (L v body) t), and
 -- re-evaluate the result as the new current term.
-
--- This re-evaluation is the trait that distinguishes eval from
--- yacc. Yacc does not re-parse a reduced term.
 
 eval' (L v body) (t: rest) = eval' (subst body v t) rest
 
