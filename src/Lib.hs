@@ -106,27 +106,6 @@ eval' t@(Var v) stack = unwind t stack
 unwind t [] = t
 unwind t (t1:rest) = unwind (A t $ eval t1) rest
 
--- ** Comparisons with the lambda-calculator as a scheme macro
-
--- A (meta-) lambda-calculator implemented as a Scheme macro
---    http://pobox.com/~oleg/ftp/Computation/rewriting-rule-lambda.txt
-
--- was the first implementation of the parsing normalization
--- algorithm. The rewriting-lambda implementation had a few differences,
--- and some elegance. The major difference is that all composite terms
--- were represented as S-expressions. An application of a term 'b' to
--- term 'a' was an S-expression (a b). An abstraction was also an
--- S-expression, with a distinguishes symbol 'lambda' at the head. This
--- uniform realization of terms as S-expressions is very close to the
--- original lambda-calculus. In Church's formulation, the language was
--- realized by a string of characters and delimiters on the
--- paper. 'lambda' was just a typographic convention.
-
--- A series of applications '(A (A (A t t1) t2) ...)' in the
--- rewriting-lambda implementation were represented by a list (t t1 t2
--- ...). The stack is "rolled-in" in a term itself.  Therefore, the
--- rewriting-lambda implementation did not need a separate stack.
-
 -- ** Lambda-reductions as parsing without an explicit heterogeneous stack
 
 -- Ken Shan wrote about his experience of using the above algorithm to
