@@ -13,24 +13,22 @@ module Lib
     ) where
 
 import Prelude hiding ((^))
-
--- the following imports are required for a tracing eval
 import Control.Monad.Writer
 
 -- * The syntax of terms: the language to parse
 
 -- The primitive construct of the language is a variable (a.k.a. identifier). In
 -- our language, identifiers are colored for the sake of the hygiene of
--- beta-substitutions (see below for more details).
+-- beta-substitutions.
 
-type VColor  = Int  -- the "color" of a variable. 0 is the "transparent color"
-data VarName = VC VColor String deriving (Eq)
+type Color = Int  -- the "color" of a variable. 0 is the "transparent color"
+data Var   = Var Color String deriving (Eq)
 
 -- Identifiers along with composite terms (abstractions and applications) make up
 -- our language: ~A~ is Application, and ~L~ for Lambda is abstraction.
 
-data Term = Var VarName | A Term Term | L VarName Term
-            deriving Eq
+data Term = V Var | A Term Term | L Var Term
+          deriving Eq
 
 -- * Normal-order reduction as parsing
 
@@ -69,7 +67,7 @@ eval term = eval' term []
 eval' :: Term -> [Term] -> Term
 
 -- *** parsing variables and abstractions on the empty stack
-eval' t@(Var v) [] = t -- just a variable with nothing to apply it to
+eval' t@(V v) [] = t -- just a variable with nothing to apply it to
 
 -- If we see a naked lambda at the top-level, it will remain the lambda
 -- form but with the reduced body. However, eta-reductions can remove
@@ -96,7 +94,7 @@ eval' (A t1 t2) stack = eval' t1 (t2:stack)
 -- the current context is (A (A (A x t1) t2) ...). Neither of these applications
 -- can be reduced. Therefore, we just reduce t1, t2 ... separately
 
-eval' t@(Var v) stack = unwind t stack
+eval' t@(V v) stack = unwind t stack
 
 -- ** Unwind the stack
 
@@ -126,11 +124,11 @@ unwind t (t1:rest) = unwind (A t $ eval t1) rest
 
 -- ** trivial cases
 
-subst :: Term -> VarName -> Term -> Term
+subst :: Term -> Var -> Term -> Term
 
-subst term v (Var v') | v == v' = term -- identity substitution
-subst t@(Var x) v st | x == v    = st
-                       | otherwise = t
+subst term v (V v') | v == v' = term -- identity substitution
+subst t@(V x) v st  | x == v  = st
+                      | otherwise = t
 subst (A t1 t2) v st = A (subst t1 v st) $ (subst t2 v st)
 subst t@(L x _) v _ | v == x  = t  -- v is shadowed in lambda form
 
@@ -140,7 +138,7 @@ subst t@(L x _) v _ | v == x  = t  -- v is shadowed in lambda form
 -- is free in the inserted term 'st', a capture is possible. Therefore, we
 -- first need to check if x is indeed free in st. If so, we have to
 -- repaint x within the body. We use an auxiliary function "occurs term
--- v" which returns (Bool,VarName). The result is (False,_) if v does not
+-- v" which returns (Bool,Var). The result is (False,_) if v does not
 -- appear free in term. Otherwise, the result is "(True, v')" where v' has
 -- the same name as v but perhaps a different color. The color of v' is the
 -- largest possible color of all variables with the name of "v" that
@@ -155,31 +153,33 @@ subst t@(L x _) v _ | v == x  = t  -- v is shadowed in lambda form
 subst (L x body) v st = (L x' (subst body' v st))
     where
        (f,x_occur_st) = occurs st x
-       (x',body') =
-            if f then
-                     let x_uniq_st_v = bump_color' (bump_color x x_occur_st) v
-                         (bf,x_occur_body) = occurs body x_uniq_st_v
-                         x_unique = if bf
-                                    then bump_color x_uniq_st_v x_occur_body
-                                    else x_uniq_st_v
-                   in (x_unique,subst body x (Var x'))
-           else (x,body)
-       bump_color (VC color name) (VC color' _) =
-                                     (VC ((max color color')+1) name)
-       bump_color' v1@(VC _ name) v2@(VC _ name') =
-                   if name==name' then bump_color v1 v2 else v1
 
+       (x',body') =
+         if f
+         then
+           let x_uniq_st_v = bump_color' (bump_color x x_occur_st) v
+               (bf,x_occur_body) = occurs body x_uniq_st_v
+               x_unique = if bf
+                          then bump_color x_uniq_st_v x_occur_body
+                          else x_uniq_st_v
+           in (x_unique,subst body x (V x'))
+         else (x,body)
+
+       bump_color (Var color name) (Var color' _) =
+         (Var ((max color color')+1) name)
+       bump_color' v1@(Var _ name) v2@(Var _ name') =
+         if name==name' then bump_color v1 v2 else v1
 
 -- Note how the body of the if expression refers to its own result:
 -- x'. A lazy language has its elegance.
 
-occurs :: Term -> VarName -> (Bool, VarName)
-occurs (Var v'@(VC c' name')) v@(VC c name)
+occurs :: Term -> Var -> (Bool, Var)
+occurs (V v'@(Var c' name')) v@(Var c name)
     | not (name == name')  = (False, v)
     | c == c'              = (True, v)
     | otherwise            = (False,v')
-occurs (A t1 t2) v = let (f1,v1@(VC c1 _)) = occurs t1 v
-                         (f2,v2@(VC c2 _)) = occurs t2 v
+occurs (A t1 t2) v = let (f1,v1@(Var c1 _)) = occurs t1 v
+                         (f2,v2@(Var c2 _)) = occurs t2 v
                      in (f1 || f2, if c1 > c2 then v1 else v2)
 occurs (L x body) v | x == v    = (False,v)
                     | otherwise = occurs body v
@@ -190,7 +190,7 @@ occurs (L x body) v | x == v    = (False,v)
 -- reduce (L v (A t v)) where v is not free in t.
 
 check_eta :: Term -> Term
-check_eta (L v (A t (Var v')))
+check_eta (L v (A t (V v')))
       | v == v' && (let (flag,_) = occurs t v in not flag) = t
 check_eta term = term
 
@@ -205,20 +205,20 @@ note_reduction :: MonadWriter [(t, t1)] m => t -> t1 -> m ()
 note_reduction label redex = tell [(label,redex)]
 
 meval' :: MonadWriter [([Char], Term)] m => Term -> [Term] -> m Term
-meval' t@(Var v) [] = return t -- just a variable with nothing to apply it to
+meval' t@(V v) [] = return t -- just a variable with nothing to apply it to
 meval' (L v body) [] = do { body' <- meval' body []; mcheck_eta $ L v body' }
 meval' a@(L v body) (t: rest) = do
                                   note_reduction "beta" (A a t)
                                   meval' (subst body v t) rest
 meval' (A t1 t2) stack = meval' t1 (t2:stack)
-meval' t@(Var v) stack = munwind t stack
+meval' t@(V v) stack = munwind t stack
 
 munwind :: MonadWriter [([Char], Term)] m => Term -> [Term] -> m Term
 munwind t [] = return t
 munwind t (t1:rest) = do { t1' <- meval' t1 []; munwind (A t t1') rest }
 
 mcheck_eta :: MonadWriter [([Char], Term)] m => Term -> m Term
-mcheck_eta red@(L v (A t (Var v')))
+mcheck_eta red@(L v (A t (V v')))
       | v == v' && (let (flag,_) = occurs t v in not flag)
         = do { note_reduction "eta" red; return t }
 mcheck_eta term = return term
@@ -246,7 +246,7 @@ mweval term = runWriter (meval' term [])
 -- Now, let's define a few identifiers.
 
 make_var :: String -> Term
-make_var = Var . VC 0  -- a convenience function
+make_var = V . Var 0  -- a convenience function
 
 [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z] = map make_var
   ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
@@ -257,7 +257,7 @@ make_var = Var . VC 0  -- a convenience function
 infixl 8 #
 (#) = A
 infixr 6 ^              -- a better notation for a lambda-abstraction
-(Var v) ^ body = L v body
+(V v) ^ body = L v body
 
 -- Note that
 -- LC> x # y # z
@@ -276,9 +276,10 @@ infixr 6 ^              -- a better notation for a lambda-abstraction
 -- When we pretty-print a variable, we keep in mind that 0 is the
 -- "transparent color".
 
-instance Show VarName where
-   show (VC color name) = if color == 0 then name
-                                         else name ++ "~" ++ (show color)
+instance Show Var where
+   show (Var color name) = if color == 0
+                          then name
+                          else name ++ "~" ++ (show color)
 
 -- Jón Fairbairn suggested limiting the print depth and showing '...'
 -- for deeply nested expressions: "I picked up the 'print ... for deeply
@@ -300,7 +301,7 @@ instance Show VarName where
 -- prints terms up to the specific depth. Beyond that, we print ...
 
 show_term :: (Num a, Ord a) => Term -> a -> String
-show_term (Var v) _ = show v       -- show the variable regardless of depth
+show_term (V v) _ = show v       -- show the variable regardless of depth
 show_term _ depth | depth <= 0 = "..."
 show_term term depth = showt term
  where
@@ -323,11 +324,11 @@ instance Show Term where
 -- variables seen so far. The former is the black list for free
 -- variables.
 
-free_vars:: Term -> [VarName]
+free_vars:: Term -> [Var]
 free_vars term = free_vars' term [] []
    where
      -- free_vars' term list-of-bound-vars list-of-free-vars-so-far
-     free_vars' (Var v) bound free = if v `elem` bound then free else v:free
+     free_vars' (V v) bound free = if v `elem` bound then free else v:free
      free_vars' (A t1 t2) bound free =
                 free_vars' t1 bound $ free_vars' t2 bound free
      free_vars' (L v body) bound free = free_vars' body (v:bound) free
@@ -350,7 +351,7 @@ term_equal_p :: Term -> Term -> Bool
 term_equal_p term1 term2 = term_equal_p' term1 term2 ([],[],0)
   where
   -- both terms are variables
-  term_equal_p' (Var v1) (Var v2) (bdic1,bdic2,_) =
+  term_equal_p' (V v1) (V v2) (bdic1,bdic2,_) =
     case (lookup v1 bdic1,lookup v2 bdic2) of
     (Just bv1,Just bv2) -> bv1 == bv2 -- both v1 v2 are bound to the same val
     (Nothing,Nothing)   -> v1 == v2   -- both v1 and v2 are free
@@ -371,5 +372,3 @@ term_equal_p term1 term2 = term_equal_p' term1 term2 ([],[],0)
 
   -- otherwise, the terms do not compare
   term_equal_p' _ _ _ = False
-
-
