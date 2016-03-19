@@ -103,6 +103,8 @@ eval' t@(Var v) stack = unwind t stack
 -- term (A (A (A t t1') t2') ...) where t1' t2' ... are reduced t1 t2
 -- ... -- as top-level terms.
 
+unwind :: Term -> [Term] -> Term
+
 unwind t [] = t
 unwind t (t1:rest) = unwind (A t $ eval t1) rest
 
@@ -122,6 +124,8 @@ unwind t (t1:rest) = unwind (A t $ eval t1) rest
 -- approach makes the result more pleasant to look at.
 
 -- ** trivial cases
+
+subst :: Term -> VarName -> Term -> Term
 
 subst term v (Var v') | v == v' = term -- identity substitution
 subst t@(Var x) v st | x == v    = st
@@ -168,6 +172,7 @@ subst (L x body) v st = (L x' (subst body' v st))
 -- Note how the body of the if expression refers to its own result:
 -- x'. A lazy language has its elegance.
 
+occurs :: Term -> VarName -> (Bool, VarName)
 occurs (Var v'@(VC c' name')) v@(VC c name)
     | not (name == name')  = (False, v)
     | c == c'              = (True, v)
@@ -183,6 +188,7 @@ occurs (L x body) v | x == v    = (False,v)
 -- Check to see if an eta-reduction applies, that is, that we're to
 -- reduce (L v (A t v)) where v is not free in t.
 
+check_eta :: Term -> Term
 check_eta (L v (A t (Var v')))
       | v == v' && (let (flag,_) = occurs t v in not flag) = t
 check_eta term = term
@@ -194,8 +200,10 @@ check_eta term = term
 -- see the list of all reductions. First, we re-write the evaluator
 -- in a monadic notation.
 
+note_reduction :: MonadWriter [(t, t1)] m => t -> t1 -> m ()
 note_reduction label redex = tell [(label,redex)]
 
+meval' :: MonadWriter [([Char], Term)] m => Term -> [Term] -> m Term
 meval' t@(Var v) [] = return t -- just a variable with nothing to apply it to
 meval' (L v body) [] = do { body' <- meval' body []; mcheck_eta $ L v body' }
 meval' a@(L v body) (t: rest) = do
@@ -203,9 +211,12 @@ meval' a@(L v body) (t: rest) = do
                                   meval' (subst body v t) rest
 meval' (A t1 t2) stack = meval' t1 (t2:stack)
 meval' t@(Var v) stack = munwind t stack
+
+munwind :: MonadWriter [([Char], Term)] m => Term -> [Term] -> m Term
 munwind t [] = return t
 munwind t (t1:rest) = do { t1' <- meval' t1 []; munwind (A t t1') rest }
 
+mcheck_eta :: MonadWriter [([Char], Term)] m => Term -> m Term
 mcheck_eta red@(L v (A t (Var v')))
       | v == v' && (let (flag,_) = occurs t v in not flag)
         = do { note_reduction "eta" red; return t }
@@ -213,6 +224,7 @@ mcheck_eta term = return term
 
 -- There are two implementations. One uses the pure, Writer monad
 
+mweval :: Term -> (Term, [([Char], Term)])
 mweval term = runWriter (meval' term [])
 
 -- We can now use mweval instead of eval to see both the result and the
@@ -232,6 +244,7 @@ mweval term = runWriter (meval' term [])
 
 -- Now, let's define a few identifiers.
 
+make_var :: String -> Term
 make_var = Var . VC 0  -- a convenience function
 
 [a,b,c,x,y,z,f,g,h,p,q] =
@@ -284,6 +297,7 @@ instance Show VarName where
 --    show_term term max_depth
 -- prints terms up to the specific depth. Beyond that, we print ...
 
+show_term :: (Num a, Ord a) => Term -> a -> String
 show_term (Var v) _ = show v       -- show the variable regardless of depth
 show_term _ depth | depth <= 0 = "..."
 show_term term depth = showt term
@@ -330,6 +344,7 @@ free_vars term = free_vars' term [] []
 -- dictionary for the first term, ditto for the second term, and the
 -- counter to maintain the unique binding values.
 
+term_equal_p :: Term -> Term -> Bool
 term_equal_p term1 term2 = term_equal_p' term1 term2 ([],[],0)
   where
   -- both terms are variables
