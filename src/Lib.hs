@@ -3,12 +3,13 @@
 -- * Preliminaries
 module Lib
     ( eval
-    , (^)                   -- abstraction: x ^ body
-    , (#)                   -- application: a # b
-    , a,b,c,x,y,z,f,g,h,p,q -- variables
-    , make_var              -- to make more variables
-    , show_term             -- to print out the term to the specific depth
-    , term_equal_p          -- compare two terms modulo alpha-renaming
+    , (^)                       -- abstraction: x ^ body
+    , (#)                       -- application: a # b
+    , a,b,c,d,e,f,g,h,i,j,k,l,m
+    , n,o,p,q,r,s,t,u,v,w,x,y,z -- variables
+    , make_var                  -- to make more variables
+    , show_term                 -- to print out the term to the specific depth
+    , term_equal_p              -- compare two terms modulo alpha-renaming
     ) where
 
 import Prelude hiding ((^))
@@ -247,8 +248,9 @@ mweval term = runWriter (meval' term [])
 make_var :: String -> Term
 make_var = Var . VC 0  -- a convenience function
 
-[a,b,c,x,y,z,f,g,h,p,q] =
-   map make_var ["a","b","c","x","y","z","f","g","h","p","q"]
+[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z] = map make_var
+  ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
+
 
 -- ** Operators to build applications and abstractions
 
