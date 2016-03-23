@@ -10,6 +10,9 @@ module Lib
     , make_var                  -- to make more variables
     , show_term                 -- to print out the term to the specific depth
     , term_equal_p              -- compare two terms modulo alpha-renaming
+    , mweval
+    , reductions
+    , nReductions
     ) where
 
 import Prelude hiding ((^))
@@ -311,7 +314,7 @@ show_term term depth = showt term
    showt' term = show_term term (depth - 1)
 
 instance Show Term where
-   show term = show_term term 10
+   show term = show_term term 15
 
 
 
@@ -372,3 +375,9 @@ term_equal_p term1 term2 = term_equal_p' term1 term2 ([],[],0)
 
   -- otherwise, the terms do not compare
   term_equal_p' _ _ _ = False
+
+reductions :: Term -> [Term]
+reductions term = map snd . snd $ mweval term
+
+nReductions :: Term -> Int
+nReductions = length . reductions
