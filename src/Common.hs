@@ -1,11 +1,12 @@
 module Common where
 
 import Lib
-import Prelude hiding ((^), const)
+import Prelude hiding ((^), const, id)
 
 unit = make_var "unit"
 
 const = x ^ y ^ x
+id = z ^ z
 
 couple = (a ^ b ^ x ^ (x # a # b))
 pi1 = (a ^ a # (x ^ y ^ x))

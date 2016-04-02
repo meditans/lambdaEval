@@ -9,7 +9,7 @@
 -- vincolato.
 module ScottEncoding where
 
-import Prelude hiding ((^), const, sum)
+import Prelude hiding ((^), const, sum, id)
 
 import Lib
 import Common
@@ -100,17 +100,48 @@ prod = n ^ m ^ (cata # (caseSplit # (const # i0) # (sum # n))) # m
 -- Questa e' la definizione del predecessore come catamorfismo:
 predCata = cata # (fNat # inn)
 
--- Proviamo a ridefinire questa funzione come paramorfismo. Come sarebbe il
--- precursore? Sul caso 0 deve ritornare const (inl unit), sull'altro e' pi2
-preParaPred = caseSplit # (const # (inl # unit)) # pi2
-
 -- Notiamo che e' equivalente alla definizione con out:
 predCataIsOut n = predCata # (ii n) === out # (ii n)
 testPredCataIsOut = all predCataIsOut [0..10]
 
--- *** TODO Aggiungere i risultati sul numero di riduzioni
--- Naturalmente qui e' anche interessante porsi il problema di come varia nei due
--- casi il numero di riduzioni. E' ovvio che in un caso crescano con il crescere
--- del numero, nell'altro no.
+-- Proviamo a ridefinire questa funzione come paramorfismo. Come sarebbe il
+-- precursore? Sul caso 0 deve ritornare const (inl unit), sull'altro e' pi2
+preParaPred = caseSplit # (const # (inl # unit)) # pi2
+
+-- da cui potremmo definire predPara = para # preParaPred, che funziona anche MA:
+
+-- #+begin_src text
+-- λ> map (\n -> nReductions $ para # preParaPred # ii n) [0..10]
+-- [38,76,116,156,196,236,276,316,356,396,436]
+
+-- λ> map (\n -> nReductions $ predCata # ii n) [0..10]
+-- [28,57,87,117,147,177,207,237,267,297,327]
+-- #+end_src
+
+-- Da cui vediamo che, come ci aspettavamo, la performance del paramorfismo e' un
+-- poco peggiore, ma inoltre non si ferma asintoticamente. AAAARGH! COME MAI!
+-- Dipende dal fatto che le funzioni che sto usando per valutare questo lambda
+-- calcolo non sono abbastanza lazy?
+
+-- Questa cosa potrebbe migliorare se invece di codificare esplicitamente il
+-- paramorfismo tramite il catamorfismo utilizzassimo =para-CHARN= per definirlo
+-- direttamente con un punto fisso?
+
+
+-- cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
+
+paraCHARN = p ^ (fix # (f ^ comp3 # p # (fNat # (split # f # id)) # out))
+
+-- A questo punto si ha che:
+-- #+begin_src text
+-- λ> map (\n -> nReductions $ paraCHARN # preParaPred # ii n) [0..10]
+-- [27,32,32,32,32,32,32,32,32,32,32]
+-- #+end_src
+
+-- Quindi praticamente in questo caso siamo riusciti a riportare il nostro count ad
+-- essere indipendente dalla grandezza dell'input. Questo in effetti avviene
+-- perche' non stiamo costringendo la computazione a passare dal collo di bottiglia
+-- del paramorfismo, ma semplicemente la stiamo definendo direttamente con il punto
+-- fisso.
 
 -- ** TODO Pensare a qualcosa per fare vedere che i catamorfismi migliorano.
