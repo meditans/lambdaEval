@@ -54,20 +54,55 @@ fNat = f ^ funPlus # (i ^ i) # f
 -- corrispondente diagramma categoriale.
 cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
 
+-- ** Paramorfismi
+-- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
+
+-- Diciamo che voglio scrivere i paramorfismi con le funzioni che userei quando
+-- vado a scrivere il sistema di equazioni. Questo perche' voglio che in seguito la
+-- chiamata di queste funzioni di alto livello si mantenga vicina a quanto dico
+-- appunto con le equazioni.
+
+-- #+BEGIN_SRC text
+--                                      1 + pi2
+-- 1 + Nat  --------->  1 + C x Nat   ---------> 1 + Nat
+--    |                      |                      |
+--    |                      |                      | in
+--    v                      v           pi2        v
+--   Nat    --------->    C x Nat     --------->   Nat
+--                           |
+--                           | pi1
+--                           v
+--                           C
+-- #+END_SRC
+
+-- Questo per dire che, se voglio chiamare ~g~ la freccia scritta seguendo le
+-- equazioni in forma paramorfica, allora la freccia da ~1 + C Nat~ a ~C Nat~
+-- dev'essere ~<g, in . T pi2>~.
+
+-- Nel caso dei naturali, questo vuol dire che ho una ~g~ della forma ~1 + C Nat ->
+-- C~.
+
+para = f ^ comp # pi1
+                # (cata # (split # f # (comp # inn # (fNat # pi2))))
 
 -- * Case studies
 -- ** Case study: la funzione (*2)
 -- Questo e' l'ingrediente catamorfico
-phi = caseSplit # (const # i0) # (comp # suc # suc)
+preCataDouble = caseSplit # (const # i0) # (comp # suc # suc)
+-- Quindi il modo di scrivere questa funzione sarebbe ~cata preCataDouble~.
 
 -- ** Case study: le funzioni (+) e (*)
 -- Possiamo definire molto semplicemente somme e prodotti
 sum  = n ^ m ^ (cata # (caseSplit # (const # n) # suc)) # m
 prod = n ^ m ^ (cata # (caseSplit # (const # i0) # (sum # n))) # m
 
--- ** Case Study: predCata
+-- ** Case Study: la funzione predecessore
 -- Questa e' la definizione del predecessore come catamorfismo:
 predCata = cata # (fNat # inn)
+
+-- Proviamo a ridefinire questa funzione come paramorfismo. Come sarebbe il
+-- precursore? Sul caso 0 deve ritornare const (inl unit), sull'altro e' pi2
+preParaPred = caseSplit # (const # (inl # unit)) # pi2
 
 -- Notiamo che e' equivalente alla definizione con out:
 predCataIsOut n = predCata # (ii n) === out # (ii n)
