@@ -13,6 +13,7 @@ module Lib
     , mweval
     , reductions
     , nReductions
+    , (===)
     ) where
 
 import Prelude hiding ((^))
@@ -381,3 +382,8 @@ reductions term = map snd . snd $ mweval term
 
 nReductions :: Term -> Int
 nReductions = length . reductions
+
+infix 4 ===
+
+(===) :: Term -> Term -> Bool
+t1 === t2 = eval t1 == eval t2
