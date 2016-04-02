@@ -85,6 +85,38 @@ cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
 para = f ^ comp # pi1
                 # (cata # (split # f # (comp # inn # (fNat # pi2))))
 
+-- Questa definizione, con il punto fisso, ha invece delle buone proprieta'
+-- computazionali.
+paraCHARN = p ^ (fix # (f ^ comp3 # p # (fNat # (split # f # id)) # out))
+
+-- ** Histomorfismi
+-- Per parlare degli histomorfismi dovremmo per prima cosa parlare delle cv-algebre.
+
+-- Ricordiamo che dato un funtore $F$ abbiamo un funtore
+
+-- $F^{\times} : \mathcal{C} \times \mathcal{C} \rightarrow \mathcal{C}$
+
+-- $F^{\times}(A,X) = A \times F(X)$
+
+-- Di conseguenza, possiamo parlare del funtore indotto:
+
+-- $F^{\times}_A : \mathcal{C} \rightarrow \mathcal{C}$
+
+-- che manda $X$ in $A \times F(X)$. Il punto fisso di questo funtore, come
+-- coalgebra terminale, sara' $\nu F^{\times}_A$, e quindi posso definire il funtore
+
+-- $F^{\nu} : \mathcal{C} \rightarrow \mathcal{C}$
+
+-- $F^{\nu}(A) = \nu F^{\times}_A$
+
+-- Nel caso dei numeri naturali, una cv-coalgebra non e' altro che una freccia
+-- $1 + \nu F^{\times}_C \rightarrow C$
+
+-- Rimandiamo l'implementazione di questo a dopo che avro' scritto il codice per
+-- gli anamorfismi, visto che l'espressione libera con fix richiede l'uso degli
+-- anamorfismi.
+
+
 -- * Case studies
 -- ** Case study: la funzione (*2)
 -- Questo e' l'ingrediente catamorfico
@@ -127,10 +159,7 @@ preParaPred = caseSplit # (const # (inl # unit)) # pi2
 -- paramorfismo tramite il catamorfismo utilizzassimo =para-CHARN= per definirlo
 -- direttamente con un punto fisso?
 
-
--- cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
-
-paraCHARN = p ^ (fix # (f ^ comp3 # p # (fNat # (split # f # id)) # out))
+-- Si, implementando paraCHARN (vedi sopra)
 
 -- A questo punto si ha che:
 -- #+begin_src text
@@ -145,3 +174,4 @@ paraCHARN = p ^ (fix # (f ^ comp3 # p # (fNat # (split # f # id)) # out))
 -- fisso.
 
 -- ** TODO Pensare a qualcosa per fare vedere che i catamorfismi migliorano.
+  
