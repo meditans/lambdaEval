@@ -56,38 +56,35 @@ cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
 
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
+-- Voglio scrivere i paramorfismi con le funzioni che userei scrivendo il sistema
+-- di equazioni. Ricordiamo che:
 
--- Diciamo che voglio scrivere i paramorfismi con le funzioni che userei quando
--- vado a scrivere il sistema di equazioni. Questo perche' voglio che in seguito la
--- chiamata di queste funzioni di alto livello si mantenga vicina a quanto dico
--- appunto con le equazioni.
+-- $\begin{CD}
+-- 1 + \mathbf{N} @>>> 1 + (C \times \mathbf{N}) @>1+\pi_2>> 1 + \mathbf{N} \\
+-- @VVV                @VVV                                  @VinVV         \\
+-- \mathbf{N}     @>>> C \times \mathbf{N}       @>\pi_2>>   \mathbf{N}     \\
+-- @.                  @V\pi_1VV                             @.             \\
+--                @. C                           @.                         \\
+-- \end{CD}$
 
--- #+BEGIN_SRC text
---                                      1 + pi2
--- 1 + Nat  --------->  1 + C x Nat   ---------> 1 + Nat
---    |                      |                      |
---    |                      |                      | in
---    v                      v           pi2        v
---   Nat    --------->    C x Nat     --------->   Nat
---                           |
---                           | pi1
---                           v
---                           C
--- #+END_SRC
+-- Questo per dire che, se voglio chiamare $g$ la freccia scritta seguendo le
+-- equazioni in forma paramorfica, allora la freccia $1 + (C \times \mathbf{N})
+-- \rightarrow C \times \mathbf{N}$
+-- dev'essere $\langle g, in \circ T \pi_2 \rangle$.
 
--- Questo per dire che, se voglio chiamare ~g~ la freccia scritta seguendo le
--- equazioni in forma paramorfica, allora la freccia da ~1 + C Nat~ a ~C Nat~
--- dev'essere ~<g, in . T pi2>~.
-
--- Nel caso dei naturali, questo vuol dire che ho una ~g~ della forma ~1 + C Nat ->
--- C~.
+-- Nel caso dei naturali, questo vuol dire che ho una $g$ della forma $1 + (C \times
+-- \mathbf{N}) \rightarrow C$.
 
 para = f ^ comp # pi1
                 # (cata # (split # f # (comp # inn # (fNat # pi2))))
 
 -- Questa definizione, con il punto fisso, ha invece delle buone proprieta'
 -- computazionali.
-paraCHARN = p ^ (fix # (f ^ comp3 # p # (fNat # (split # f # id)) # out))
+
+paraCHARN = p ^ (fix # (f ^ comp3 # p
+                                  # (fNat # (split # f # id))
+                                  # out))
+
 
 -- ** Histomorfismi
 -- Per parlare degli histomorfismi dovremmo per prima cosa parlare delle cv-algebre.
