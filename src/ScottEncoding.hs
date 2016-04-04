@@ -53,6 +53,32 @@ fNat = f ^ funPlus # (i ^ i) # f
 -- Questa e' la ricetta generale del catamorfismo: notare come ricalca il
 -- corrispondente diagramma categoriale.
 cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
+-- ** Anamorfismi
+
+-- $\begin{CD}
+-- F \nu \! F @<<< F C     \\
+-- @AoutAA            @AAA \\
+-- \nu \! F   @<<< C       \\
+-- \end{CD}$
+
+-- Analogamente a quanto abbiamo fatto con i catamorfismi, andiamo a definire gli
+-- anamorfismi tramite un combinatore di punto fisso;
+
+-- Partiamo da ana-CHARN:
+-- $out \circ f = F f \circ \phi$
+
+-- Nel nostro setting possiamo comodamente invertire, ottenendo:
+-- $f = out^{-1} \circ F f \circ \phi$
+
+-- Ovvero:
+ana = p ^ (fix # (f ^ comp3 # inn # (fNat # f) # p))
+
+-- A questo punto c'e' un unico problema: in generale il punto fisso algebrico non
+-- coincide con quello coalgebrico, ad esempio per il funtore $F X = 1 + X$ abbiamo
+-- sia i numeri naturali che i numeri conaturali.
+
+-- Devo capire meglio quali sono i modi di integrare queste due visioni per i fini
+-- che mi propongo.
 
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
