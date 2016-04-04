@@ -111,6 +111,29 @@ paraCHARN = p ^ (fix # (f ^ comp3 # p
                                   # (fNat # (split # f # id))
                                   # out))
 
+-- ** Apomorfismi
+
+-- $\begin{CD}
+-- F \nu\! F @<F [f,id]<< F (C + \nu\! F) \\
+-- @AoutAA                @AA\phi A       \\
+-- \nu\! F   @<<f<        C               \\
+-- \end{CD}$
+
+-- Questi si ottengono semplicemente dualizzando la costruzione per i catamorfismi.
+-- In particolare, lo encodiamo direttamente tramite la proprieta' universale:
+
+-- $out \circ f = F [f, id] \circ \phi \iff f = apo(\phi)$
+
+-- Da cui, per noi che possiamo invertire:
+
+-- $f = fix (out^{-1} \circ F [f, id] \circ \phi)$
+
+apo = p ^ (fix # (f ^ comp3 # inn
+                            # (fNat # (caseSplit # f # id))
+                            # p))
+
+-- Dovremmo a questo punto a fare un esempio di apomorfismo: la coricorsione
+-- primitiva su conaturali o sulle coliste.
 
 -- ** Histomorfismi
 -- Per parlare degli histomorfismi dovremmo per prima cosa parlare delle cv-algebre.
