@@ -1,3 +1,8 @@
 /TAGS
 /.stack-work/
 /src/ltxpng/
+/src/auto/
+/src/*.html
+/src/*.org
+/src/*.pdf
+/src/*.tex
