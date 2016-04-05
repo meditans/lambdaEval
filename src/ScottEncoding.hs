@@ -158,10 +158,57 @@ apo = p ^ (fix # (f ^ comp3 # inn
 -- Nel caso dei numeri naturali, una cv-coalgebra non e' altro che una freccia
 -- $1 + \nu F^{\times}_C \rightarrow C$
 
--- Rimandiamo l'implementazione di questo a dopo che avro' scritto il codice per
--- gli anamorfismi, visto che l'espressione libera con fix richiede l'uso degli
--- anamorfismi.
+-- A questo punto si ha che:
 
+-- $\begin{CD}
+-- F \mu\! F @>F\; ana\langle f, in^{-1}\rangle >> F (F^{\nu} C) \\
+-- @VinVV                                          @V\phi VV     \\
+-- F         @>>f>                                 C             \\
+-- \end{CD}$
+
+-- Ovvero (histo-CHARN):
+-- $f \circ in = \phi \circ F\; ana \langle f, in^{-1}\rangle$
+-- da cui, invertendo, abbiamo:
+-- $f = \phi \circ F\; ana \langle f, out \rangle \circ out$
+
+-- Al solito noi possiamo scriverlo con il punto fisso, dicendo che
+histo = p ^ (fix # (f ^ comp3 # p
+                              # (fNat # (ana # (split # f # out)))
+                              # out))
+
+-- Quello che vogliamo adesso e' un esempio di histomorfismo, ad esempio quello che
+-- ci garantisce fibonacci:
+
+-- l'idea e' come al solito partire dalle equazioni, per trascriverle:
+-- $fib\; 0 = 0$
+-- $fib\; 1 = 1$
+-- $fib\; n = fib\; (pred\; n) + fib\; (pred\; (pred\; n))$
+
+-- Vediamo chi e' $F(F^{\nu}C)$ nel caso dei numeri naturali. Ricordiamo che $F^{\mu}C$ e'
+-- il punto fisso coalgebrico di $C\times (1+X) \equiv C + C\times X$, ovvero una lista non
+-- vuota e potenzialmente infinita di $C$, che io posso nativamente distruggere.
+
+-- La funzione con cui genero fibonacci e' quindi:
+-- $preFibo = [const\; 0, [const\; 1, add \circ (id \times cur)] \circ distr \circ out] : 1 + F^{\nu}\mathbf{N} \rightarrow \mathbf{N}$
+
+-- Quello che succede, e' che la seconda parte, $F^{\nu}C$ viene esplosa in $C \times (1 + F^{\nu}C)$,
+-- trasformata da $distr$ in $C + C \times F^{\nu}C$ e infine consumata dalla funzione case.
+
+-- Problemi da risolvere:
+-- - out :: non e' l'out di Nat, ma l'out della coalgebra. Bisognerebbe quindi
+--      scriverlo.
+-- - distr :: bisogna scrivere la funzione distr che funzioni nel modo specificato.
+-- - cur :: bisogna esplicitamente scrivere cur, che poi e' una componente della
+--      coalgebra.
+
+-- Allora, per quanto riguarda out, essenzialmente questo e' complicato dal fatto
+-- che di solito io usavo la costruzione case per distinguere delle somme. Con
+-- questa rappresentazione, invece, sono naturalmente portato a cercare di scrivere
+-- un case per un prodotto, in cui dentro ci sono le distinzioni. Questo ovviamente
+-- non si presta bene a quello che vorrei fare.
+
+-- Per parlare bene della traduzione dei tipi coinduttivi devo capire bene perche'
+-- $\exists \beta . A = \forall \alpha . (\forall \beta . A \rightarrow \alpha) \rightarrow \alpha$
 
 -- * Case studies
 -- ** Case study: la funzione (*2)
