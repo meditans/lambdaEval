@@ -80,6 +80,39 @@ ana = p ^ (fix # (f ^ comp3 # inn # (fNat # f) # p))
 -- Devo capire meglio quali sono i modi di integrare queste due visioni per i fini
 -- che mi propongo.
 
+-- L'approccio che seguo adesso e' la codifica dei tipi coalgebrici seguendo gli
+-- "Scott encoding per codata" cosi' come suggeriti da Geuvers: consideriamo in
+-- particolare l'encoding degli stream, visto che era quello su cui trovavo piu'
+-- difficolta'. Sappiamo che possiamo codificare uno stream di $A$ equivalentemente
+-- come:
+
+-- $Str_A = \mu \beta . \exists \alpha . \alpha \times (\alpha \rightarrow A) \times (\alpha \rightarrow \beta)$
+-- $Str_A = \exists \alpha . \alpha \times (\alpha \rightarrow A) \times (\alpha \rightarrow Str_A)$
+-- $Str_A = \forall \gamma . (\forall \alpha . \alpha \times (\alpha \rightarrow A) \times (\alpha \rightarrow Str_A) \rightarrow \gamma) \rightarrow \gamma$
+
+-- Usando la traduzione standard degli esistenziali, che viene accennata alla fine
+-- del paper di Geuvers, ma trovo piu' utile pensare come una generalizzazione del
+-- currying: $\exists \alpha.A$ e' un particolare $\tilde{\alpha}$ mentre $\forall \alpha.A$ e' una funzione sui tipi.
+
+-- - [ ] espandere meglio sulla traduzione standard
+
+-- Il problema che si poneva allora era come generare un termine di tipo $Str_A$,
+-- cosa che io trovavo difficile per via del non riuscire a scrivere un termine di
+-- tipo $\alpha \rightarrow Str_A$.
+
+-- L'intuizione che voglio testare adesso e' il funzionamento di un trucco, di
+-- cui costruisco per prima cosa il corrispettivo in haskell; purtroppo notiamo
+-- che in haskell siamo costretti a dare una presentazione isoricorsiva di
+-- questo fatto, mentre per comodita' di scrittura nel caso generale terremo la
+-- versione equiricorsiva.
+
+newtype Stream o = Stream (forall g. (forall a. (a, a -> o, a -> Stream o) -> g) -> g)
+
+stream :: a -> (a -> o) -> (a -> a) -> Stream o
+stream seed extract update = Stream $ \f -> f (seed, extract, (\i -> stream (update i) extract update))
+
+naturals :: Stream Integer
+naturals = stream 0 (\x->x) succ
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
 -- Voglio scrivere i paramorfismi con le funzioni che userei scrivendo il sistema
