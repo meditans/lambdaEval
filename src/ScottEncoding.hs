@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
 -- * Scott Encoding
 -- In questo modulo andiamo a vedere l'encoding basato su case (generalmente
 -- chiamato Scott encoding). Nonostante la difficolta' del tipare questo tipo di
@@ -53,6 +55,7 @@ fNat = f ^ funPlus # (i ^ i) # f
 -- Questa e' la ricetta generale del catamorfismo: notare come ricalca il
 -- corrispondente diagramma categoriale.
 cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
+
 -- ** Anamorfismi
 
 -- $\begin{CD}
@@ -113,6 +116,67 @@ stream seed extract update = Stream $ \f -> f (seed, extract, (\i -> stream (upd
 
 naturals :: Stream Integer
 naturals = stream 0 (\x->x) succ
+
+-- La morale della favola e' questa, sono riuscito a creare un costruttore del
+-- termine che mi serviva, sostituendo il termine problematico che avevo $\alpha \rightarrow Str_A$,
+-- con un piu' ovvio $\alpha \rightarrow \alpha$, che parla in modo diretto del seed, utilizzando in fondo
+-- un combinatore di punto fisso.
+
+-- notiamo che il pattern del costruttore e':
+
+-- $stream \; s \; e \; u = \lambda f. f \; s \; e \; (\lambda i. stream \; (u \; i) \; e \; u)$
+
+-- - [ ] Capire come questo si mette a posto secondo lo schema dei costruttori di
+--   Geuvers.
+
+-- Possiamo parlare a questo punto dell'analogo per i numeri naturali, ovvero per
+-- il funtore $F X = 1 + X$.
+
+-- Sappiamo che questo da origine ai numeri CoNaturali, che dovrebbero quindi
+-- essere definiti equivalentemente come:
+
+-- $CoNat = \mu \beta. \forall \alpha. \alpha \times (\alpha \rightarrow 1 + \beta)$
+-- $CoNat = \forall \alpha. \alpha \times (\alpha \rightarrow 1 + CoNat)$
+-- $CoNat = \forall \gamma. (\forall \alpha. \alpha \times (\alpha \rightarrow 1 + CoNat) \rightarrow \gamma) \rightarrow \gamma$
+
+-- Ricordiamo che Geuvers suggerisce che se i codata sono encodati in $\lambda 2 \mu$ come:
+-- $\underline{D} = \mu \beta. \exists \alpha. \alpha \times (\alpha \rightarrow T^1(\beta)) \times \dots \times (\alpha \rightarrow T^n(\beta))$
+
+-- allora il generico distruttore $\underline{D_i} : \underline{D} \rightarrow T^i(\underline{D})$ e' encodato da:
+-- $\underline{D_i} \; s = s \; (\lambda p.(\pi_{i+1} \; p) \; (\pi_1 \; p))$
+
+-- Nel mio caso, il distruttore sarebbe encodato da:
+-- $D \; s = s \; (\lambda p. \pi_2 \; p \; (\pi_1 \; p))$
+
+-- Abbiamo allora che:
+
+constant a b = b
+
+newtype CoNatural = CoNatural (forall g. (forall a. (a, a -> Either () CoNatural) -> g) -> g)
+
+conatural :: a -> (a -> Either () a) -> CoNatural
+conatural seed a2Eua = CoNatural $ \f -> f (seed, \i -> fmap (\a -> conatural a a2Eua) (a2Eua i))
+
+infinite :: CoNatural
+infinite = conatural 0 Right
+
+destructCoNatural :: CoNatural -> Either () CoNatural
+destructCoNatural (CoNatural f) = f (\(p1,p2) -> p2 p1)
+
+-- Vediamo un calcolo equazionale del fatto che se distruggiamo il conaturale
+-- infinito otteniamo il conaturale infinito.
+
+-- #+BEGIN_EXAMPLE
+-- destructCoNatural infinite
+-- = (unCoNatural (conatural 0 Right)) (\(p1,p2) -> p2 p1)
+-- = (\f -> f (0, \i -> fmap (\a -> conatural a Right) (Right i))) (\(p1,p2) -> p2 p1)
+-- = (\f -> f (0, \i -> conatural i Right)) (\(p1,p2) -> p2 p1)
+-- = (\(p1,p2) -> p2 p1) (0, \i -> conatural i Right)
+-- = (\i -> conatural i Right) 0
+-- = conatural 0 Right
+-- = infinite
+-- #+END_EXAMPLE
+
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
 -- Voglio scrivere i paramorfismi con le funzioni che userei scrivendo il sistema
@@ -300,4 +364,3 @@ preParaPred = caseSplit # (const # (inl # unit)) # pi2
 -- fisso.
 
 -- ** TODO Pensare a qualcosa per fare vedere che i catamorfismi migliorano.
-  
