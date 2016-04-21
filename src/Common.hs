@@ -27,3 +27,4 @@ funTimes = (f ^ g ^ a ^ a # (i ^ j ^ x ^ x # (f # i) # (g # j)))
 
 comp = f ^ g ^ x ^ f # (g # x)
 comp3 = f ^ g ^ h ^ x ^ f # (g # (h # x))
+

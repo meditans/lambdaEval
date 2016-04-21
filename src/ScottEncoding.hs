@@ -150,8 +150,6 @@ naturals = stream 0 (\x->x) succ
 
 -- Abbiamo allora che:
 
-constant a b = b
-
 newtype CoNatural = CoNatural (forall g. (forall a. (a, a -> Either () CoNatural) -> g) -> g)
 
 conatural :: a -> (a -> Either () a) -> CoNatural
@@ -160,11 +158,14 @@ conatural seed a2Eua = CoNatural $ \f -> f (seed, \i -> fmap (\a -> conatural a 
 infinite :: CoNatural
 infinite = conatural 0 Right
 
+conaturalN :: Int -> CoNatural
+conaturalN n = conatural n (\i -> if i == 0 then Left () else Right (i-1))
+
 destructCoNatural :: CoNatural -> Either () CoNatural
 destructCoNatural (CoNatural f) = f (\(p1,p2) -> p2 p1)
 
 -- Vediamo un calcolo equazionale del fatto che se distruggiamo il conaturale
--- infinito otteniamo il conaturale infinito.
+-- infinito otteniamo il conaturale infinito:
 
 -- #+BEGIN_EXAMPLE
 -- destructCoNatural infinite
@@ -175,6 +176,80 @@ destructCoNatural (CoNatural f) = f (\(p1,p2) -> p2 p1)
 -- = (\i -> conatural i Right) 0
 -- = conatural 0 Right
 -- = infinite
+-- #+END_EXAMPLE
+
+-- Destrutturazione di un conaturale finito:
+-- #+BEGIN_EXAMPLE
+-- destructCoNatural (conaturalN (n+1))
+-- = (unCoNatural (conatural (n+1) (\i -> if i == 0 then Left () else Right (i-1)))) (\(p1,p2) -> p2 p1)
+-- = (\f -> f ((n+1), \i -> fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) i))) (\(p1,p2) -> p2 p1)
+-- = (\i -> fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) i)) (n+1)
+-- = fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) (n+1))
+-- = fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) (Right n)
+-- = Right (conatural n (\i -> if i == 0 then Left () else Right (i-1)))
+-- #+END_EXAMPLE
+
+-- Destrutturazione del conaturale nullo:
+-- #+BEGIN_EXAMPLE
+-- destructCoNatural (conaturalN 0)
+-- = (unCoNatural (conatural 0 (\i -> if i == 0 then Left () else Right (i-1)))) (\(p1,p2) -> p2 p1)
+-- = (\f -> f (0, \i -> fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) i))) (\(p1,p2) -> p2 p1)
+-- = (\i -> fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) i)) 0
+-- = fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) ((\j -> if j == 0 then Left () else Right (j-1)) 0)
+-- = fmap (\a -> conatural a (\i -> if i == 0 then Left () else Right (i-1))) (Left ())
+-- = Left ()
+-- #+END_EXAMPLE
+
+-- La domanda che mi pongo e': quante di queste dimostrazioni sintattiche riesco a
+-- internalizzare una volta che ho tradotto queste cose in sottotipi?
+
+-- E' arrivato il momento di tradurre queste trascrizione in $\lambda$ calcolo: in
+-- particolare bisogna tradurre ~conatural~ e ~destructCoNatural~. Cominciamo da
+-- ~conatural~, ricordando la definizione:
+
+-- #+BEGIN_EXAMPLE
+-- conatural :: a -> (a -> Either () a) -> CoNatural
+-- conatural seed a2Eua = CoNatural $ \f -> f (seed, \i -> fmap (\a -> conatural a a2Eua) (a2Eua i))
+-- #+END_EXAMPLE
+
+-- Una traduzione diretta sarebbe quindi:
+
+-- #+BEGIN_EXAMPLE
+-- conat = seed ^ a2Eua ^ f ^ f # (couple # seed # (i ^ caseSplit # id # (a ^ conat # a # a2Eua) # (a2Eua # i)))
+--   where
+--     seed  = make_var "seed"
+--     a2Eua = make_var "a2Eua"
+-- #+END_EXAMPLE
+
+-- A questo punto basta solamente fissare la ricorsione di ~conat~ utilizzando il
+-- combinatore di punto fisso ~fix~:
+
+conat = fix # (g ^ seed ^ a2Eua ^ f ^ f # (couple # seed # (i ^ caseSplit # id
+                                                                          # (a ^ g # a # a2Eua)
+                                                                          # (a2Eua # i))))
+  where
+    seed  = make_var "seed"
+    a2Eua = make_var "a2Eua"
+
+-- A questo punto scriviamo allora l'encoding del nostro conaturale infinito:
+infty = conat # i0 # inr
+
+-- Una cosa che non mi piace troppo e' che, avendo le definizioni con il fix
+-- all'interno dei termini, di fatto non posso avere una forma chiusa, che posso
+-- controllare come rappresentazione. Posso comunque controllarne un taglio
+-- arbitrario, ad esempio facendo uso dell'istanza di Show.
+
+-- Definiamo anche il distruttore di conaturali:
+-- #+BEGIN_EXAMPLE
+-- destructCoNatural :: CoNatural -> Either () CoNatural
+-- destructCoNatural (CoNatural f) = f (\(p1,p2) -> p2 p1)
+-- #+END_EXAMPLE
+
+destrConat = f ^ f # (c ^ (pi2 # c) # (pi1 # c))
+
+-- Naturalmente dovremmo chiederci se succede che:
+-- #+BEGIN_EXAMPLE
+-- λ> (show . eval) (destrConat # infty) == (show . eval) (inr # infty)
 -- #+END_EXAMPLE
 
 -- ** Paramorfismi
@@ -306,6 +381,24 @@ histo = p ^ (fix # (f ^ comp3 # p
 
 -- Per parlare bene della traduzione dei tipi coinduttivi devo capire bene perche'
 -- $\exists \beta . A = \forall \alpha . (\forall \beta . A \rightarrow \alpha) \rightarrow \alpha$
+-- Questo e' stato trattato nella sezione che riguarda gli anamorfismi.
+
+-- Detto questo allora, ci rimangono solo un paio di preoccupazioni. Cerchiamo di
+-- scrivere il caso che ci interessa per il trattamento categorico dei naturali:
+-- Ci troviamo davanti ad una freccia del tipo $1 + \nu F^{\times}_C \rightarrow
+-- C$,
+-- e stiamo cercando di definire quel punto fisso coalgebrico. Sappiamo che quella
+-- costruzione descrive le coliste, quindi liste di naturali non necessariamente
+-- finite. Possiamo quindi collegarle alle espressioni equivalenti:
+
+-- $\mu \beta. \exists \alpha. (\alpha \times (\alpha \rightarrow C) \times (\alpha
+-- \rightarrow 1 + \beta))$
+-- $CoList C = \exists \alpha. (\alpha \times (\alpha \rightarrow C) \times (\alpha \rightarrow 1 + CoList C))$
+-- $CoList C = \exists \gamma. (\exists \alpha. (\alpha \times (\alpha \rightarrow C) \times (\alpha \rightarrow 1 + CoList C)) \rightarrow \gamma) \rightarrow \gamma$
+
+-- Ovviamente potremmo sostituire i prodotti, almeno nell'ultima espressione, con
+-- la loro forma uncurried, cosa che ci conviene fare se vogliamo evitare
+-- l'overhead sintattico dei prodotti generici.
 
 -- * Case studies
 -- ** Case study: la funzione (*2)
