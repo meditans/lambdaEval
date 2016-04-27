@@ -9,6 +9,8 @@
 
 -- Questo accade perche' non siamo costretti a scegliere, a priori, un encoding
 -- vincolato.
+
+-- ** Preliminari
 module ScottEncoding where
 
 import Prelude hiding ((^), const, sum, id)
@@ -59,9 +61,9 @@ cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
 -- ** Anamorfismi
 
 -- $\begin{CD}
--- F \nu \! F @<<< F C     \\
--- @AoutAA            @AAA \\
--- \nu \! F   @<<< C       \\
+-- F \nu \! F @<F f<< F C       \\
+-- @AoutAA            @AA\phi A \\
+-- \nu \! F   @<<f< C           \\
 -- \end{CD}$
 
 -- Analogamente a quanto abbiamo fatto con i catamorfismi, andiamo a definire gli
@@ -109,10 +111,15 @@ ana = p ^ (fix # (f ^ comp3 # inn # (fNat # f) # p))
 -- questo fatto, mentre per comodita' di scrittura nel caso generale terremo la
 -- versione equiricorsiva.
 
-newtype Stream o = Stream (forall g. (forall a. (a, a -> o, a -> Stream o) -> g) -> g)
+newtype Stream o = Stream (forall g. (forall a.
+  (a, a -> o, a -> Stream o) -> g) -> g)
 
 stream :: a -> (a -> o) -> (a -> a) -> Stream o
-stream seed extract update = Stream $ \f -> f (seed, extract, (\i -> stream (update i) extract update))
+stream seed extract update = Stream $
+  \f -> f ( seed
+          , extract
+          , (\i -> stream (update i) extract update)
+          )
 
 naturals :: Stream Integer
 naturals = stream 0 (\x->x) succ
@@ -224,9 +231,11 @@ destructCoNatural (CoNatural f) = f (\(p1,p2) -> p2 p1)
 -- A questo punto basta solamente fissare la ricorsione di ~conat~ utilizzando il
 -- combinatore di punto fisso ~fix~:
 
-conat = fix # (g ^ seed ^ a2Eua ^ f ^ f # (couple # seed # (i ^ caseSplit # id
-                                                                          # (a ^ g # a # a2Eua)
-                                                                          # (a2Eua # i))))
+conat = fix #
+  (g ^ seed ^ a2Eua ^ f ^
+   f # ( couple
+       # seed
+       # (i ^ caseSplit # id # (a ^ g # a # a2Eua) # (a2Eua # i))))
   where
     seed  = make_var "seed"
     a2Eua = make_var "a2Eua"
@@ -251,6 +260,45 @@ destrConat = f ^ f # (c ^ (pi2 # c) # (pi1 # c))
 -- #+BEGIN_EXAMPLE
 -- λ> (show . eval) (destrConat # infty) == (show . eval) (inr # infty)
 -- #+END_EXAMPLE
+
+-- Inoltre probabilmente potremmo preoccuparci del fatto che i lambda  termini infiniti non hanno una rappresentazione finita, ovvero una forma normale.
+-- Questo vuol dire che posso rapprensentarli solamente come un'espressione contentente ~fix~?
+-- Trovo questo approccio abbastanza insoddisfacente.
+
+-- Occupiamoci del problema di costruire il combinatore di anamorfismo per questo tipo di dato coinduttivo.
+-- Una volta risolto il problema in generale, calcoleremo il termine per le coliste, che ci serve per costruire l'isomorfismo sui naturali.
+-- All'inizio abbiamo scritto che:
+
+-- $\begin{CD}
+-- F \nu \! F @<F f<< F C       \\
+-- @AoutAA            @AA\phi A \\
+-- \nu \! F   @<<f< C           \\
+-- \end{CD}$
+
+-- Per prima cosa dobbiamo cercare di capire chi è la nostra funzione $out$ qui. Notiamo che non è l'inverso di $in$, visto che opera su tipi di dato diversi.
+-- Per fortuna è chiaro a cosa corrisponda il nostro out una volta che abbiamo definito i nostri dati in modo coalgebrico.
+-- Prendiamo ad esempio la nostra costruzione degli stream:
+
+newtype Stream o = Stream (forall g. (forall a.
+  (a, a -> o, a -> Stream o) -> g) -> g)
+
+-- È evidente che $out$ sia estraibile in generale da tutti i componenti della tupla tranne il seed.
+-- Questo mi fa chiedermi come mai non rappresento direttamente la costruzione sopra come:
+newtype Stream o = Stream (forall g. (forall a.
+  (a, a -> (o, Stream o)) -> g) -> g)
+-- ovvero, per quale motivo non mi tengo più fedele alla definizione categoriale del funtore.
+
+-- Notiamo che nel mondo induttivo l'encoding segue le somme di prodotti, mentre in quello coinduttivo segue i prodotti di somme.
+-- Mi piacerebbe capire più in generale il perché di questo fenomeno.
+
+-- Definiamo allora i combinatori in e out nel caso delle coliste di naturali, visto che questo è quello che ci serve per gli histomorfismi dei naturali.
+-- Iniziamo dai distruttori: avremo due distruttori, $head$ e $tail$, che insieme formeranno il nostro $out$, nel senso che:
+
+-- $\begin{CD}
+-- Nat \times CoList(Nat)\\
+-- @AoutA\langle head, tail \rangle A \\
+-- CoList(Nat)  \\
+-- \end{CD}$
 
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
@@ -343,6 +391,8 @@ apo = p ^ (fix # (f ^ comp3 # inn
 -- da cui, invertendo, abbiamo:
 -- $f = \phi \circ F\; ana \langle f, out \rangle \circ out$
 
+-- Notiamo che in questo caso $ana$ è l'anamorfismo per le coliste, e non l'anamorfismo per i numeri naturali.
+
 -- Al solito noi possiamo scriverlo con il punto fisso, dicendo che
 histo = p ^ (fix # (f ^ comp3 # p
                               # (fNat # (ana # (split # f # out)))
@@ -399,6 +449,20 @@ histo = p ^ (fix # (f ^ comp3 # p
 -- Ovviamente potremmo sostituire i prodotti, almeno nell'ultima espressione, con
 -- la loro forma uncurried, cosa che ci conviene fare se vogliamo evitare
 -- l'overhead sintattico dei prodotti generici.
+
+-- Quindi al solito si tratta di definire il combinatore di costruzione in analogia a quanto fatto nel capitolo degli anamorfismi:
+
+newtype CoList c = CoList (forall g. (forall a.
+  (a, a -> c, a -> Either () (CoList c)) -> g) -> g)
+
+coList :: a -> (a -> c) -> (a -> Either () a) -> CoList c
+coList seed head a2Eua = CoList $
+  \f -> f ( seed
+          , head
+          , \i -> fmap (\a -> coList a head a2Eua) (a2Eua i)
+          )
+
+
 
 -- * Case studies
 -- ** Case study: la funzione (*2)
