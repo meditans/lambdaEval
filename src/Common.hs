@@ -12,6 +12,11 @@ couple = (a ^ b ^ x ^ (x # a # b))
 pi1 = (a ^ a # (x ^ y ^ x))
 pi2 = (a ^ a # (x ^ y ^ y))
 
+triple = (a ^ b ^ c ^ x ^ (x # a # b # c))
+pi13 = (a ^ a # (x ^ y ^ z ^ x))
+pi23 = (a ^ a # (x ^ y ^ z ^ y))
+pi33 = (a ^ a # (x ^ y ^ z ^ z))
+
 inl = (a ^ x ^ y ^ x # a)
 inr = (a ^ x ^ y ^ y # a)
 

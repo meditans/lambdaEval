@@ -279,13 +279,19 @@ destrConat = f ^ f # (c ^ (pi2 # c) # (pi1 # c))
 -- Per fortuna è chiaro a cosa corrisponda il nostro out una volta che abbiamo definito i nostri dati in modo coalgebrico.
 -- Prendiamo ad esempio la nostra costruzione degli stream:
 
-newtype Stream o = Stream (forall g. (forall a.
-  (a, a -> o, a -> Stream o) -> g) -> g)
+-- #+BEGIN_EXAMPLE
+-- newtype Stream o = Stream (forall g. (forall a.
+--   (a, a -> o, a -> Stream o) -> g) -> g)
+-- #+END_EXAMPLE
 
 -- È evidente che $out$ sia estraibile in generale da tutti i componenti della tupla tranne il seed.
 -- Questo mi fa chiedermi come mai non rappresento direttamente la costruzione sopra come:
-newtype Stream o = Stream (forall g. (forall a.
-  (a, a -> (o, Stream o)) -> g) -> g)
+
+-- #+BEGIN_EXAMPLE
+-- newtype Stream o = Stream (forall g. (forall a.
+--   (a, a -> (o, Stream o)) -> g) -> g)
+-- #+END_EXAMPLE
+
 -- ovvero, per quale motivo non mi tengo più fedele alla definizione categoriale del funtore.
 
 -- Notiamo che nel mondo induttivo l'encoding segue le somme di prodotti, mentre in quello coinduttivo segue i prodotti di somme.
@@ -299,6 +305,29 @@ newtype Stream o = Stream (forall g. (forall a.
 -- @AoutA\langle head, tail \rangle A \\
 -- CoList(Nat)  \\
 -- \end{CD}$
+
+-- sappiamo che possiamo codificare i due distruttori seguendo:
+-- $\underline{D_i} = s (\lambda p. (\pi_{i+1} p) (\pi_1 p))$
+
+headCoListNat :: CoList Int -> Int
+headCoListNat (CoList cl) = cl (\p -> (snd3 p) (fst3 p))
+  where
+    fst3 (a,b,c) = a
+    snd3 (a,b,c) = b
+
+tailCoListNat :: CoList Int -> Either () (CoList Int)
+tailCoListNat (CoList cl) = cl (\p -> (trd3 p) (fst3 p))
+  where
+    fst3 (a,b,c) = a
+    trd3 (a,b,c) = c
+
+-- questi, tradotti nel nostro linguaggio del lambda-calcolo:
+
+head = cl ^ cl # (p ^ (pi23 # p) # (pi13 # p))
+  where cl = make_var "cl"
+
+tail = cl ^ cl # (p ^ (pi33 # p) # (pi13 # p))
+  where cl = make_var "cl"
 
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
