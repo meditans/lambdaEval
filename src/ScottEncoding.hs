@@ -58,7 +58,7 @@ fNat = f ^ funPlus # (i ^ i) # f
 -- corrispondente diagramma categoriale.
 cata = p ^ (fix # (f ^ comp3 # p # (fNat # f) # out))
 
--- ** Anamorfismi
+-- ** TODO Anamorfismi
 
 -- $\begin{CD}
 -- F \nu \! F @<F f<< F C       \\
@@ -84,6 +84,8 @@ ana = p ^ (fix # (f ^ comp3 # inn # (fNat # f) # p))
 
 -- Devo capire meglio quali sono i modi di integrare queste due visioni per i fini
 -- che mi propongo.
+
+-- *** Stream
 
 -- L'approccio che seguo adesso e' la codifica dei tipi coalgebrici seguendo gli
 -- "Scott encoding per codata" cosi' come suggeriti da Geuvers: consideriamo in
@@ -135,6 +137,8 @@ naturals = stream 0 (\x->x) succ
 
 -- - [ ] Capire come questo si mette a posto secondo lo schema dei costruttori di
 --   Geuvers.
+
+-- *** Conaturali
 
 -- Possiamo parlare a questo punto dell'analogo per i numeri naturali, ovvero per
 -- il funtore $F X = 1 + X$.
@@ -264,6 +268,8 @@ destrConat = f ^ f # (c ^ (pi2 # c) # (pi1 # c))
 -- Inoltre probabilmente potremmo preoccuparci del fatto che i lambda  termini infiniti non hanno una rappresentazione finita, ovvero una forma normale.
 -- Questo vuol dire che posso rapprensentarli solamente come un'espressione contentente ~fix~?
 -- Trovo questo approccio abbastanza insoddisfacente.
+  
+-- *** Coliste
 
 -- Occupiamoci del problema di costruire il combinatore di anamorfismo per questo tipo di dato coinduttivo.
 -- Una volta risolto il problema in generale, calcoleremo il termine per le coliste, che ci serve per costruire l'isomorfismo sui naturali.
@@ -306,7 +312,43 @@ destrConat = f ^ f # (c ^ (pi2 # c) # (pi1 # c))
 -- CoList(Nat)  \\
 -- \end{CD}$
 
--- sappiamo che possiamo codificare i due distruttori seguendo:
+-- Il codice risulta quindi:
+
+newtype CoList c = CoList (forall g. (forall a.
+  (a, a -> c, a -> Either () (CoList c)) -> g) -> g)
+
+coList :: a -> (a -> c) -> (a -> Either () a) -> CoList c
+coList seed head a2Eua = CoList $
+  \f -> f ( seed
+          , head
+          , \i -> fmap (\a -> coList a head a2Eua) (a2Eua i)
+          )
+
+-- Nel nostro $\lambda$-calcolo, il combinatore coList diventa:
+
+colist' = seed ^ head ^ a2Eua ^ f ^
+  f # (triple # seed
+              # head
+              # (i ^ (caseSplit # id # (a ^ colist # a # head # a2Eua)
+                   # (a2Eua # i))))
+  where
+    [seed, head, a2Eua] = map make_var ["seed", "head", "a2Eua"]
+
+-- che dobbiamo ridefinire nella versione con il fix come:
+
+colist = fix # (g ^ (seed ^ head ^ a2Eua ^ f ^
+  f # (triple # seed
+              # head
+              # (i ^ (caseSplit # id # (a ^ g # a # head # a2Eua)
+                   # (a2Eua # i))))))
+  where
+    [seed, head, a2Eua] = map make_var ["seed", "head", "a2Eua"]
+
+-- A questo punto tentiamo di costruire una versione della colista infinita dei numeri naturali, prima in Haskell:
+
+infiniteCoList = colist # i0 # id # (a ^ inr # (suc # a))
+
+-- Sappiamo che possiamo codificare i due distruttori seguendo:
 -- $\underline{D_i} = s (\lambda p. (\pi_{i+1} p) (\pi_1 p))$
 
 headCoListNat :: CoList Int -> Int
@@ -323,11 +365,46 @@ tailCoListNat (CoList cl) = cl (\p -> (trd3 p) (fst3 p))
 
 -- questi, tradotti nel nostro linguaggio del lambda-calcolo:
 
-head = cl ^ cl # (p ^ (pi23 # p) # (pi13 # p))
+coListHead = cl ^ cl # (p ^ (pi23 # p) # (pi13 # p))
   where cl = make_var "cl"
 
-tail = cl ^ cl # (p ^ (pi33 # p) # (pi13 # p))
+coListTail = cl ^ cl # (p ^ (pi33 # p) # (pi13 # p))
   where cl = make_var "cl"
+
+-- Questi schemi funzionano, nel senso che abbiamo:
+
+-- #+BEGIN_EXAMPLE
+-- λ> eval $ coListHead # infiniteCoList
+-- (\z. (\s. z))
+-- λ> eval $ coListHead # (coListTail # infiniteCoList)
+-- (\z. (\s. s (\z. (\s. z))))
+-- λ> eval $ coListHead # (coListTail # (coListTail # infiniteCoList))
+-- (\z. (\s. s (\z. (\s. s (\z. (\s. z))))))
+-- #+END_EXAMPLE
+
+-- Vogliamo adesso scrivere l'$out$ in generale, perché questo ci serve per gli histomorfismi.
+-- Nel caso delle coliste, $out$ è effettivamente il prodotto della funzione $head$ con la funzione $tail$, per cui mi basta definire:
+
+coListOut = split # coListHead # coListTail
+
+-- Notiamo che ovviamente non possiamo valutare questa perché manca di una forma normale, ma è quello che ci servirà nella costruzione degli histomorfismi.
+
+-- Al solito, ci serve anche esplicitare l'inverso della funzione $coListOut$.
+-- Seguendo Geuvers, nel caso generale dobbiamo aspettarci qualcosa come:
+
+-- $cons : T^1(D) \rightarrow \dots \rightarrow T^n(D) \rightarrow D$
+-- $cons = \lambda x_1, \dots, \lambda x_n.\lambda f.f \langle x_1, \lambda z. x_1, \dots, \lambda z. x_n \rangle$
+
+-- che noi potremmo scrivere, nel caso delle coliste, come:
+
+coListIn = h ^ t ^ f ^ f # (triple # h # (z ^ h) # (z ^ t))
+
+-- Il problema di questo è che quando andiamo a valutarlo abbiamo:
+
+-- #+BEGIN_EXAMPLE
+-- λ> eval $ coListTail # (coListIn # i0 # infiniteCoList)
+-- Interrupted.
+-- #+END_EXAMPLE
 
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
@@ -478,18 +555,6 @@ histo = p ^ (fix # (f ^ comp3 # p
 -- Ovviamente potremmo sostituire i prodotti, almeno nell'ultima espressione, con
 -- la loro forma uncurried, cosa che ci conviene fare se vogliamo evitare
 -- l'overhead sintattico dei prodotti generici.
-
--- Quindi al solito si tratta di definire il combinatore di costruzione in analogia a quanto fatto nel capitolo degli anamorfismi:
-
-newtype CoList c = CoList (forall g. (forall a.
-  (a, a -> c, a -> Either () (CoList c)) -> g) -> g)
-
-coList :: a -> (a -> c) -> (a -> Either () a) -> CoList c
-coList seed head a2Eua = CoList $
-  \f -> f ( seed
-          , head
-          , \i -> fmap (\a -> coList a head a2Eua) (a2Eua i)
-          )
 
 
 
