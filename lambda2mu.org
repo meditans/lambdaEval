@@ -11,7 +11,7 @@ La dimostrazione si articola in una serie di 6 passi:
 **** Definizione di $\Xi$
 Detto $\mathsf{T}$ l'insieme dei termini fortemente normalizzabili, definiamo $\Xi$ come un reticolo (insieme parzialmente ordinato in cui ogni coppia di elementi ha sia un estremo inferiore che un estremo superiore) completo (ogni suo sottoinsieme ha sia l’inf che il sup) di sottoinsiemi di $\mathsf{T}$.
 I tipi vengono modellati come elementi di $\Xi$.
-**** Operazioni che modellano $\rightarrow$, $\Lambda$, $\mu$ e $\nu$
+**** Operazioni che modellano $\rightarrow$, $\Delta$, $\mu$ e $\nu$
 Abbiamo già tradotto i tipi nel nostro modello, quindi proseguiamo definendo le operazioni su $\Xi$ che modellano le operazioni sui tipi elencate.
 **** Creazione di una funzione di interpretazione
 Le operazioni che abbiamo definito sopra ci servono per estendere una funzione $\rho : Var \rightarrow \Xi$, a $\llbracket \cdot \rrbracket \rho : Type \rightarrow \Xi$.
@@ -31,18 +31,18 @@ Assumiamo un numero infinito di variabili $V_1, V_2, V_3, \dots$, nel seguito us
 Definiamo cos'è un tipo:
 #+BEGIN_QUOTE
 - $X$ è un tipo.
-- Se $A$ e $B$ sono tipi, lo sono anche $A \rightarrow B$ e $\Lambda X.A$ (notiamo che $\Lambda X.A$ è la notazione per l'astrazione sui tipi).
+- Se $A$ e $B$ sono tipi, lo sono anche $A \rightarrow B$ e $\Delta X.A$ (notiamo che $\Delta X.A$ è la notazione per l'astrazione sui tipi).
 - Se $X$ occorre positivamente in $A$, allora $\mu X.A$ e $\nu X.A$ sono tipi.
 #+END_QUOTE
 
-Notiamo che gli operatori $\Lambda$, $\mu$ e $\nu$ bindano le occorrenze della variabile a cui si riferiscono.
+Notiamo che gli operatori $\Delta$, $\mu$ e $\nu$ bindano le occorrenze della variabile a cui si riferiscono.
 Possiamo allora definire meglio cosa intendiamo con occorrenze positive e negative:
 - $X$ occorre positivamente in $A$, ovvero $Pos(A,X)$ se ogni occorrenza libera di $X$ in $A$ è sul lato sinistro di un numero pari di $\rightarrow$.
 - $X$ occorre negativamente in $A$, ovvero $Neg(A,X)$ se ogni occorrenza libera di $X$ in $A$ è sul lato sinistro di un numero dispari di $\rightarrow$.
 
 Come esempio di occorrenze positive e negative, consideriamo gli encoding standard:
-$A \times B = \Lambda Z. (A \rightarrow B \rightarrow Z) \rightarrow Z$
-$A + B = \Lambda Z. (A \rightarrow Z) \rightarrow (B \rightarrow Z) \rightarrow Z$
+$A \times B = \Delta Z. (A \rightarrow B \rightarrow Z) \rightarrow Z$
+$A + B = \Delta Z. (A \rightarrow Z) \rightarrow (B \rightarrow Z) \rightarrow Z$
 Da cui, contando il numero delle occorrenze sul lato sinistro delle $\rightarrow$, si capisce che una variabile $X$ occorre positivamente in una di queste due formule se occorre positivamente sia in $A$ che in $B$.
 
 Il requisito dell'occorrenza positiva ci interessa perché assicura la monotonicità di certe operazioni sui reticoli completi, e quindi l'esistenza di massimi e minimi punti fissi, che saranno i modelli per i nostri tipi induttivi.
@@ -50,14 +50,14 @@ Il requisito dell'occorrenza positiva ci interessa perché assicura la monotonic
 *** Descrizione dei termini tipati
 Per ogni termine $\bar{\mu} \equiv \mu X.A$ ho le costanti:
 $in^{\bar{\mu}} : A[\bar{\mu}/X] \rightarrow \bar{\mu}$
-$R^{\bar{\mu}} : \Lambda Y.(\Lambda X.(X \rightarrow Y) \rightarrow A \rightarrow Y) \rightarrow \bar{\mu} \rightarrow Y$
+$R^{\bar{\mu}} : \Delta Y.(\Delta X.(X \rightarrow Y) \rightarrow A \rightarrow Y) \rightarrow \bar{\mu} \rightarrow Y$
 
 La costante $in^{\bar{\mu}}$ ci consente di costruire un termine di tipo $\bar{\mu}$ costruendo un suo unrolling $A[\bar{\mu}/X]$.
-La costante $R^{\bar{\mu}}$ è invece un combinatore per l'induzione: dato un tipo $Y$, possiamo costruire una funzione $\bar{\mu} \rightarrow Y$ usando una "ipotesi induttiva" della forma $\Lambda X. (X \rightarrow Y) \rightarrow A \rightarrow Y$.
+La costante $R^{\bar{\mu}}$ è invece un combinatore per l'induzione: dato un tipo $Y$, possiamo costruire una funzione $\bar{\mu} \rightarrow Y$ usando una "ipotesi induttiva" della forma $\Delta X. (X \rightarrow Y) \rightarrow A \rightarrow Y$.
 Possiamo pensare a quella funzione come ad una funzione che estende una funzione $X \rightarrow Y$ in una funzione $A \rightarrow Y$.
 
 Dualizzando, per ogni termine $\bar{\nu} \equiv \nu X.A$ ho le costanti:
 $out^{\bar{\nu}} : \bar{\nu} \rightarrow A[\bar{\nu}/X]$
-$S^{\bar{\nu}} : \Lambda Y. (\Lambda X. (Y \rightarrow X) \rightarrow Y \rightarrow A) \rightarrow Y \rightarrow \bar{\nu}$
+$S^{\bar{\nu}} : \Delta Y. (\Delta X. (Y \rightarrow X) \rightarrow Y \rightarrow A) \rightarrow Y \rightarrow \bar{\nu}$
 
 dove $out^{\bar{\nu}}$ rappresenta l'unrolling e $S^{\bar{\nu}}$ è un combinatore per la coinduzione.
