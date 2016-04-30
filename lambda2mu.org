@@ -23,8 +23,8 @@ $\vDash a : A \equiv \forall \rho, \forall t, \forall a, t \in \llbracket A \rrb
 **** $a$ è fortemente normalizzabile se lo è $\lvert a \rvert$
 Da questo si può concludere, perché se $\vdash a:A$ allora $\vDash a : A$, quindi $\lvert a \rvert \in \llbracket A \rrbracket \rho$.
 Questo per i primi tre punti implica che $\lvert a \rvert$ sia fortemente normalizzabile, quindi per questo lemma lo è anche $a$.
-
-*** Descrizione dei tipi
+*** Preliminari
+**** Descrizione dei tipi
 Iniziamo a descrivere i tipi che useremo nella dimostrazione.
 Assumiamo un numero infinito di variabili $V_1, V_2, V_3, \dots$, nel seguito useremo $X,Y,Z$ come metavariabili su di esse.
 
@@ -47,7 +47,7 @@ Da cui, contando il numero delle occorrenze sul lato sinistro delle $\rightarrow
 
 Il requisito dell'occorrenza positiva ci interessa perché assicura la monotonicità di certe operazioni sui reticoli completi, e quindi l'esistenza di massimi e minimi punti fissi, che saranno i modelli per i nostri tipi induttivi.
 
-*** Descrizione dei termini tipati
+**** Descrizione dei termini tipati
 Per ogni termine $\bar{\mu} \equiv \mu X.A$ ho le costanti:
 $in^{\bar{\mu}} : A[\bar{\mu}/X] \rightarrow \bar{\mu}$
 $R^{\bar{\mu}} : \Delta Y.(\Delta X.(X \rightarrow Y) \rightarrow A \rightarrow Y) \rightarrow \bar{\mu} \rightarrow Y$
@@ -61,3 +61,58 @@ $out^{\bar{\nu}} : \bar{\nu} \rightarrow A[\bar{\nu}/X]$
 $S^{\bar{\nu}} : \Delta Y. (\Delta X. (Y \rightarrow X) \rightarrow Y \rightarrow A) \rightarrow Y \rightarrow \bar{\nu}$
 
 dove $out^{\bar{\nu}}$ rappresenta l'unrolling e $S^{\bar{\nu}}$ è un combinatore per la coinduzione.
+
+**** Regole per l'assegnamento dei tipi:
+Abbiamo qui le regole per l'assegnazione dei tipi alle variabili:
+
+\begin{prooftree}
+\AxiomC {$$}
+\UnaryInfC {$x^A : A$}
+\end{prooftree}
+
+Per l'assegnazione dei tipi alle astrazioni, sia su termini che su tipi (nel secondo caso, solo se $X$ non appare libera in $A$ per ogni $x^A$ libero in $B$):
+
+\begin{prooftree}
+\AxiomC {$b : B$}
+\UnaryInfC {$\lambda x^A.b : A \rightarrow B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC {$b : B$}
+\UnaryInfC {$\Lambda X.b : \Delta X.B$}
+\end{prooftree}
+
+Infine, quelle per l'assegnazione dei tipi alle applicazioni, di nuovo sia per i termini che per i tipi:
+
+\begin{prooftree}
+\AxiomC {$c : A \rightarrow B$}
+\AxiomC {$a : A$}
+\BinaryInfC {$c \: a : B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC {$b : \Delta X.B$}
+\UnaryInfC {$b \: A : B[A/X]$}
+\end{prooftree}
+
+**** Regole di riduzione per i termini tipati
+Le prime quattro di queste riduzioni sono le consuete per il lambda-calcolo del secondo ordine;
+al solito la seconda e la quarta richiedono rispettivamente che $x^A$ e $X$ non appaiano libere in $a$:
+
+1) $(\lambda x^A.a) \: b \mapsto a[b/x^A]$
+2) $\lambda x^A.(a \: x^A) \mapsto a$
+3) $(\Lambda X.a) \: B \mapsto a[B/X]$
+4) $\Lambda X.(a \: X) \mapsto a$
+5) $R^{\bar{\mu}} \: B \: a \: (in^{\bar{\mu}} \: b) \mapsto a \: \bar{\mu} \: (R^{\bar{\mu}} \: B \: a) \: b$
+6) $out^{\bar{\nu}}(S^{\bar{\nu}} \: B \: a \: b) \mapsto a \: \bar{\nu} \: (S^{\bar{\nu}} \: B \: a) \: b$
+
+Le ultime due riduzioni riguardano invece i tipi di dato ricorsivi che abbiamo definito:
+per la prima, ad esempio, dev'essere:
+- $B : Type$
+- $a : \Delta X.(X \rightarrow B) \rightarrow A \rightarrow B$
+- $in^{\bar{\mu}} \: b : \bar{\mu}$
+- $R^{\bar{\mu}} \: B \: a : \bar{\mu} \rightarrow B$
+
+Definiamo anche $a>b$ per dire che $b$ si raggiunge con una sola applicazione di una regola di riduzione ad (un sottotermine di) $a$, mentre con $a >^* b$ intendiamo che $a$ si riduce a $b$ con un numero finito di riduzioni.
+
+
