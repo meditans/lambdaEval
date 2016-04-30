@@ -1,0 +1,63 @@
+#+TITLE: Normalizzazione forte di $\lambda 2 \mu$
+#+STARTUP: latexpreview
+
+Dobbiamo vedere che il sistema $\lambda 2 \mu$ sia fortemente normalizzante, utilizzando la consueta tecnica degli insiemi saturi.
+Secondo Geuvers, questo risultato, anche se non presente in letteratura, è simile a quanto dimostrato per un differente sistema di tipi ricorsivi da Mendler nel paper "Inductive types and type constraints in the second-order lambda calculus".
+
+** Review del paper di Mendler
+
+*** Struttura generale della dimostrazione
+La dimostrazione si articola in una serie di 6 passi:
+**** Definizione di $\Xi$
+Detto $\mathsf{T}$ l'insieme dei termini fortemente normalizzabili, definiamo $\Xi$ come un reticolo (insieme parzialmente ordinato in cui ogni coppia di elementi ha sia un estremo inferiore che un estremo superiore) completo (ogni suo sottoinsieme ha sia l’inf che il sup) di sottoinsiemi di $\mathsf{T}$.
+I tipi vengono modellati come elementi di $\Xi$.
+**** Operazioni che modellano $\rightarrow$, $\Lambda$, $\mu$ e $\nu$
+Abbiamo già tradotto i tipi nel nostro modello, quindi proseguiamo definendo le operazioni su $\Xi$ che modellano le operazioni sui tipi elencate.
+**** Creazione di una funzione di interpretazione
+Le operazioni che abbiamo definito sopra ci servono per estendere una funzione $\rho : Var \rightarrow \Xi$, a $\llbracket \cdot \rrbracket \rho : Type \rightarrow \Xi$.
+**** Definizione di $\lvert a \rvert$
+Qui definiamo cosa intendiamo quando diciamo che il termine non tipato $t$ è sostituto di un termine tipato $a$.
+**** Definizione di $\vDash a : A$
+Ovvero la nostra nozione di verità sui giudizi di tipo, definita come:
+$\vDash a : A \equiv \forall \rho, \forall t, \forall a, t \in \llbracket A \rrbracket \rho$
+**** $a$ è fortemente normalizzabile se lo è $\lvert a \rvert$
+Da questo si può concludere, perché se $\vdash a:A$ allora $\vDash a : A$, quindi $\lvert a \rvert \in \llbracket A \rrbracket \rho$.
+Questo per i primi tre punti implica che $\lvert a \rvert$ sia fortemente normalizzabile, quindi per questo lemma lo è anche $a$.
+
+*** Descrizione dei tipi
+Iniziamo a descrivere i tipi che useremo nella dimostrazione.
+Assumiamo un numero infinito di variabili $V_1, V_2, V_3, \dots$, nel seguito useremo $X,Y,Z$ come metavariabili su di esse.
+
+Definiamo cos'è un tipo:
+#+BEGIN_QUOTE
+- $X$ è un tipo.
+- Se $A$ e $B$ sono tipi, lo sono anche $A \rightarrow B$ e $\Lambda X.A$ (notiamo che $\Lambda X.A$ è la notazione per l'astrazione sui tipi).
+- Se $X$ occorre positivamente in $A$, allora $\mu X.A$ e $\nu X.A$ sono tipi.
+#+END_QUOTE
+
+Notiamo che gli operatori $\Lambda$, $\mu$ e $\nu$ bindano le occorrenze della variabile a cui si riferiscono.
+Possiamo allora definire meglio cosa intendiamo con occorrenze positive e negative:
+- $X$ occorre positivamente in $A$, ovvero $Pos(A,X)$ se ogni occorrenza libera di $X$ in $A$ è sul lato sinistro di un numero pari di $\rightarrow$.
+- $X$ occorre negativamente in $A$, ovvero $Neg(A,X)$ se ogni occorrenza libera di $X$ in $A$ è sul lato sinistro di un numero dispari di $\rightarrow$.
+
+Come esempio di occorrenze positive e negative, consideriamo gli encoding standard:
+$A \times B = \Lambda Z. (A \rightarrow B \rightarrow Z) \rightarrow Z$
+$A + B = \Lambda Z. (A \rightarrow Z) \rightarrow (B \rightarrow Z) \rightarrow Z$
+Da cui, contando il numero delle occorrenze sul lato sinistro delle $\rightarrow$, si capisce che una variabile $X$ occorre positivamente in una di queste due formule se occorre positivamente sia in $A$ che in $B$.
+
+Il requisito dell'occorrenza positiva ci interessa perché assicura la monotonicità di certe operazioni sui reticoli completi, e quindi l'esistenza di massimi e minimi punti fissi, che saranno i modelli per i nostri tipi induttivi.
+
+*** Descrizione dei termini tipati
+Per ogni termine $\bar{\mu} \equiv \mu X.A$ ho le costanti:
+$in^{\bar{\mu}} : A[\bar{\mu}/X] \rightarrow \bar{\mu}$
+$R^{\bar{\mu}} : \Lambda Y.(\Lambda X.(X \rightarrow Y) \rightarrow A \rightarrow Y) \rightarrow \bar{\mu} \rightarrow Y$
+
+La costante $in^{\bar{\mu}}$ ci consente di costruire un termine di tipo $\bar{\mu}$ costruendo un suo unrolling $A[\bar{\mu}/X]$.
+La costante $R^{\bar{\mu}}$ è invece un combinatore per l'induzione: dato un tipo $Y$, possiamo costruire una funzione $\bar{\mu} \rightarrow Y$ usando una "ipotesi induttiva" della forma $\Lambda X. (X \rightarrow Y) \rightarrow A \rightarrow Y$.
+Possiamo pensare a quella funzione come ad una funzione che estende una funzione $X \rightarrow Y$ in una funzione $A \rightarrow Y$.
+
+Dualizzando, per ogni termine $\bar{\nu} \equiv \nu X.A$ ho le costanti:
+$out^{\bar{\nu}} : \bar{\nu} \rightarrow A[\bar{\nu}/X]$
+$S^{\bar{\nu}} : \Lambda Y. (\Lambda X. (Y \rightarrow X) \rightarrow Y \rightarrow A) \rightarrow Y \rightarrow \bar{\nu}$
+
+dove $out^{\bar{\nu}}$ rappresenta l'unrolling e $S^{\bar{\nu}}$ è un combinatore per la coinduzione.
