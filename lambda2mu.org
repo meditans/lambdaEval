@@ -115,4 +115,39 @@ per la prima, ad esempio, dev'essere:
 
 Definiamo anche $a>b$ per dire che $b$ si raggiunge con una sola applicazione di una regola di riduzione ad (un sottotermine di) $a$, mentre con $a >^* b$ intendiamo che $a$ si riduce a $b$ con un numero finito di riduzioni.
 
+*** Un modello di termini non tipati
+Costruiamo ora un modello di questo lambda calcolo, mappando tipi in collezioni di termini non tipati.
+Nel seguito, indichiamo con $\lvert a \rvert$ il termine non tipato che è ottenuto da $a$ togliendo tutte le annotazioni di tipo.
+Quello che rimane saranno le costanti $in$, $out$, $R$, $S$, le variabili non tipate e i termini che formano le operazioni di astrazione e applicazione.
+Siano $t$,$u$,$v$ metavariabili per i termini non tipati.
+Ereditiamo ovviamente anche delle versioni non tipate delle regole di riduzione:
 
+1) $(\lambda x.t) \: u \mapsto t[u/x]$
+2) $\lambda x.(t \: x) \mapsto t$
+3) $R \: t \: (in \: u) \mapsto t \: (R \: t) \: u$
+4) $out(S \: t \: u) \mapsto t \: (S \: t) \: u$
+
+Manteniamo il significato degli operatori $<$ e $<^{*}$.
+
+Sia adesso $\mathsf{T}$ l'insieme dei lambda-termini non tipati fortemente normalizzanti.
+Diciamo che un termine è in ~forma normale esterna (Onf)~ se ha una delle seguenti forme sintattiche: $\lambda x.a$, $R$, $R \: t$, $in$, $in \: t$, $S$, $S \: t$, $S \: t \: u$, $out$.
+Notiamo che questo vuol dire che eventuali riduzioni di questi termini si devono applicare per forza a sottoinsiemi propri.
+Diciamo che $\xi \subseteq \Xi$ è ~chiuso per riduzione~ se $t \in \xi$ e $t >^* u$ implica che $u \in \xi$.
+Diciamo che $\xi \subseteq \Xi$ è ~completo per forma normale esterna~ se per ogni $t \in \xi$, se $t \in \mathsf{T}$ e $u \in Onf$, $t >^{*} u$ implica che $u \in \xi$.
+A questo punto possiamo definire $\Xi$ come l'insieme dei sottoinsiemi $\xi \subseteq \mathsf{T}$ che sono sia chiusi per riduzione che completi per forma normale esterna.
+Mentre l'essere fortemente normalizzabile e l'essere chiuso per riduzione sembrano subito condizioni molto ragionevoli, la completezza per forma normale esterna è una condizione abbastanza tecnica, e serve in alcuni lemmi.
+
+*** Lemma 1
+Questo lemma esprime il fatto che gli elementi di $\Xi$ sono chiusi sotto l'inverso della $\beta$-riduzione.
+#+BEGIN_QUOTE
+Per $\xi \in \Xi$, $t[u/x] \in \xi$ e $u \in \mathsf{T}$ implicano $(\lambda x.t) \: u \in \xi$
+#+END_QUOTE
+
+Per dimostrare questo fatto, vogliamo fare vedere che i termini $(\lambda x.t) \: u$ sono fortemente normalizzabili e completi per riduzione esterna.
+
+**** $t \in \mathsf{T}$
+Una sequenza di riduzioni $t = t_0 > t_1 > t_2 > \dots$, sostituendo $u$ per $x$ è una sequenza di riduzioni per $t[u/x]$:
+$t[u/x] = t_0[u/x] > t_1[u/x] > t_2[u/x] > \dots$
+e sappiamo che questa catena di riduzioni dev'essere finita, perché $t[u/x] \in \mathsf{T}$. Pertanto $t \in \mathsf{T}$.
+
+**** $(\lambda x.t) \: u \in \mathsf{T}$
