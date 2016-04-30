@@ -151,3 +151,25 @@ $t[u/x] = t_0[u/x] > t_1[u/x] > t_2[u/x] > \dots$
 e sappiamo che questa catena di riduzioni dev'essere finita, perché $t[u/x] \in \mathsf{T}$. Pertanto $t \in \mathsf{T}$.
 
 **** $(\lambda x.t) \: u \in \mathsf{T}$
+Sappiamo che $t$ e $u$ sono fortemente normalizzabili.
+Allora una riduzione infinita deve contenere una $\beta$ o $\eta$ riduzione al livello più esterno.
+
+Diciamo che sia una beta-riduzione, quindi:
+$(\lambda x.t) \: u >^* (\lambda x.t^{\prime}) \: u^{\prime} > t^{\prime}[u^{\prime}/x] > \dots$
+con $t >^* t^{\prime}$ e $u >^* u^{\prime}$. Però abbiamo che
+$t[u/x] >^* t^{\prime}[u/x] >^* t^{\prime}[u^{\prime}/x]$
+quindi $t^{\prime}[u^{\prime}/x]\in \xi \subseteq \mathsf{T}$ per la chiusura. Allora ogni possibile continuazione di questa sequenza è finita.
+
+Diciamo che sia una eta-riduzione, come:
+$(\lambda x.t) \: u >^* (\lambda x.t^{\prime\prime} \: x) \: u^{\prime} >^* t^{\prime\prime} \: u^{\prime} > \dots$
+dove stavolta $t >^* t^{\prime} = t^{\prime\prime} \: x$ e $u >^* u^{\prime}$. Abbiamo comunque che:
+$t[u/x] >^* t^{\prime}[u/x] >^* t^{\prime}[u^{\prime}/x] = t^{\prime\prime} \: u^{\prime}$
+che sta in $\xi$ per la relazione di chiusura, e quindi si ha che da quel punto in poi la catena di riduzioni dev'essere finita.
+
+**** Ogni termine $Onf$ a cui $(\lambda x.t) \: u$ riduce è in $\xi$
+Supponiamo che $(\lambda x.t) \: u$ riduca ad un termine $v \in Onf$.
+Visto che il termine non è in forma normale esterna, nella catena di riduzioni ci dev'essere una $\beta$ o $\eta$ riduzione del livello più esterno.
+Abbiamo già visto che in entrambi i casi c'è un termine $t^{\prime}[u^{\prime}/x] \in \xi$ tale che $t^{\prime}[u^{\prime}/x] >^* v$, da cui si conclude per la chiusura.
+
+**** Conclusione
+Possiamo concludere che $(\lambda x.t) \: u \in \xi$ grazie ai due punti precedenti.
