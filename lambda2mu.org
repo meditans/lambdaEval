@@ -232,3 +232,12 @@ Ecco cosa dovremmo dimostrare per confermare che queste sono buone definizioni:
 - che la funzione applicata alle funzioni $\pmb{\mu}$ e $\pmb{\nu}$ siano in effetti monotone.
 
 Anche qui, la prova di questi fatti è induzione strutturale su $A$.
+
+*** Proposizione 4
+Per ogni espressione $A$ e environments $\rho$ e $\rho^{\prime}$,
+
+1) Se $Y \notin FV(A)$, allora $\llbracket A \rrbracket \rho = \llbracket A[Y/X] \rrbracket \rho[\rho(X)/Y]$.
+2) Se $\forall X \in FV(A). \rho(X) = \rho^{\prime}(X)$, allora $\llbracket A \rrbracket \rho = \llbracket A \rrbracket \rho^{\prime}$.
+3) $\llbracket A \rrbracket \rho \in \Xi$.
+4) $Pos(A,X) \Rightarrow \lambda \xi. \llbracket A \rrbracket \rho[\xi/X]$ è un'operazione monotona su $\Xi$.
+5) $Neg(A,X) \Rightarrow \lambda \xi. \llbracket A \rrbracket \rho[\xi/X]$ è un'operazione anti-monotona su $\Xi$.
