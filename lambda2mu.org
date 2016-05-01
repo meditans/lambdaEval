@@ -203,3 +203,32 @@ Analogamente succede per $\bar{\nu} = \nu X.A$ e $out^{\bar{\nu}}$.
 Siano allora $\pmb{\mu}, \pmb{\nu} : (\Xi \xrightarrow{mon} \Xi) \rightarrow \Xi$ definiti come:
 $\pmb{\mu} (f) = lfp \: (\lambda \xi. \{t \in \mathsf{T} \mid \forall u \: (t >^* in(u) \Rightarrow u \in f(\xi))\})$
 $\pmb{\nu} (f) = gfp \: (\lambda \xi.\{t \in \mathsf{T} \mid out(t) \in f(\xi)\})$
+
+*** Proposizione 3
+Qui proviamo che le definizioni della definizione 2 sono in effetti ben formate.
+Inoltre, $\pmb{\rightarrow}$ è anti-monotona nel primo argomento e monotona nel secondo, mentre $\pmb{\Delta}$, $\pmb{\mu}$ e $\pmb{\nu}$ sono tutti operatori monotoni.
+
+Definiamo gli ~environment~ come mappe $\rho$ dalle variabili di tipo a $\Xi$.
+Se $\xi \in \Xi$, definiamo anche $\rho[\xi/X]$ come l'enviroment che associa:
+
+$$ \rho[\xi/X](Y) = \begin{cases}
+  \xi &\quad\text{if } $X = Y$      \\
+  \rho(Y) &\quad\text{otherwise}
+\end{cases}
+$$
+
+Dato un environment $\rho$, possiamo estenderlo ad una mappa $\llbracket \cdot \rrbracket \rho$ da tipi a $\Xi$ per induzione strutturale:
+
+$\llbracket X \rrbracket \rho = \rho(X)$
+$\llbracket A \rightarrow B \rrbracket \rho = \llbracket A \rrbracket \rho \pmb{\rightarrow} \llbracket B \rrbracket \rho$
+$\llbracket \Delta X.A \rrbracket \rho = \pmb{\Delta}(\lambda \xi. \llbracket A \rrbracket \rho [\xi/X])$
+$\llbracket \mu X. A \rrbracket \rho = \pmb{\mu}(\lambda \xi. \llbracket A \rrbracket \rho [\xi/X])$
+$\llbracket \nu X. A \rrbracket \rho = \pmb{\nu}(\lambda \xi. \llbracket A \rrbracket \rho [\xi/X])$
+
+Ecco cosa dovremmo dimostrare per confermare che queste sono buone definizioni:
+
+- che il significato di un'espressione di tipo sia invariante sotto alfa-conversione delle variabili legate, e dipende solamente dai valori che l'environment assegna alle variabili libere.
+- che l'insieme dei termini assegnati a $\llbracket A \rrbracket \rho$ sia un elemento di $\Xi$.
+- che la funzione applicata alle funzioni $\pmb{\mu}$ e $\pmb{\nu}$ siano in effetti monotone.
+
+Anche qui, la prova di questi fatti è induzione strutturale su $A$.
