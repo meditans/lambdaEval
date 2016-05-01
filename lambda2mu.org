@@ -173,3 +173,33 @@ Abbiamo già visto che in entrambi i casi c'è un termine $t^{\prime}[u^{\prime}
 
 **** Conclusione
 Possiamo concludere che $(\lambda x.t) \: u \in \xi$ grazie ai due punti precedenti.
+
+*** Proposizione 2
+$\Xi$ è un reticolo completo per $\subseteq$, dove l'elemento minimo $\bot$ è l'insieme degli $u \in \mathsf{T}$ che non possono essere ridotti in forma normale esterna, e il più grande minorante di un sottoinsieme non vuoto di $\Xi$ è la sua intersezione.
+
+Notiamo che le variabili sono in $\bot$, e quindi in ogni $\xi \in \Xi$.
+Notiamo anche che il maggiorante di una catena non nulla è la sua unione.
+Ora, sia $\Xi \xrightarrow{mon} \Xi$ la collezione degli operatori monotoni su $\Xi$, ordinato, come spazio di funzioni, con l'ordinamento puntuale.
+A questo punto possiamo definire le operazioni su $\Xi$ che corrispondono ai costruttori di tipo:
+
+**** Funzioni
+Sia $\pmb{\rightarrow} \in \Xi \times \Xi \rightarrow \Xi$ definita come:
+$\xi_1 \pmb{\rightarrow} \xi_2 = \{ t \in \mathsf{T} \mid \forall u ( u \in \xi_1 \Rightarrow t \: u \in \xi_2)\}$
+
+Cioè, tutti i termini fortemente normalizzanti che "funzionano sempre", ovvero che portano qualsiasi termine di $\xi_1$ in un termine di $\xi_2$.
+
+**** Astrazioni
+Modelliamo l'astrazione con l'intersezione:
+
+Sia $\pmb{\Delta} \in (\Xi \rightarrow \Xi) \rightarrow \Xi$ definita come:
+$\pmb{\Delta}(f) = \bigcap_{\xi \in \Xi} f(\xi)$
+
+**** Tipi ricorsivi
+Per quanto riguarda i tipi costruiti con $\mu$ e $\nu$, ovviamente avremo bisogno di prendere il più piccolo e il più grande punto fisso ($lfp$ e $gfp$).
+
+Dobbiamo anche considerare che $\bar{\mu} = \mu X.A$ non è esattamente $A[\bar{\mu}/X]$, bensì i due tipi sono legati dall'isomorfismo $in^{\bar{\mu}}$.
+Analogamente succede per $\bar{\nu} = \nu X.A$ e $out^{\bar{\nu}}$.
+
+Siano allora $\pmb{\mu}, \pmb{\nu} : (\Xi \xrightarrow{mon} \Xi) \rightarrow \Xi$ definiti come:
+$\pmb{\mu} (f) = lfp \: (\lambda \xi. \{t \in \mathsf{T} \mid \forall u \: (t >^* in(u) \Rightarrow u \in f(\xi))\})$
+$\pmb{\nu} (f) = gfp \: (\lambda \xi.\{t \in \mathsf{T} \mid out(t) \in f(\xi)\})$
