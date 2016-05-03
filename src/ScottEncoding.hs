@@ -406,6 +406,16 @@ coListIn = h ^ t ^ f ^ f # (triple # h # (z ^ h) # (z ^ t))
 -- Interrupted.
 -- #+END_EXAMPLE
 
+-- Il che è anche giusto, visto che stiamo cercando di stampare una coda infinita.
+-- Proviamo invece con il più semplice:
+
+-- #+BEGIN_EXAMPLE
+-- λ> eval $ coListHead # (coListIn # i0 # infiniteCoList)
+-- Interrupted.
+-- #+END_EXAMPLE
+
+-- Questo funziona senza troppi problemi!
+
 -- ** Paramorfismi
 -- Qui andiamo a questo punto a seguire il modello categorico per i paramorfismi.
 -- Voglio scrivere i paramorfismi con le funzioni che userei scrivendo il sistema
@@ -556,7 +566,29 @@ histo = p ^ (fix # (f ^ comp3 # p
 -- la loro forma uncurried, cosa che ci conviene fare se vogliamo evitare
 -- l'overhead sintattico dei prodotti generici.
 
+-- * Interrogativi
 
+-- Mi chiedo quale sia il punto della trascrizione dei tipi di dati coinduttivi come sto facendo.
+-- Infatti, alla fine nella trascrizione in lambda calcolo, mi trovo ad avere a che fare con l'operatore di punto fisso $fix$.
+-- Questo da un lato presenta un problema di rappresentazione: mi piacerebbe poter rappresentare in modo finito i termini di cui sto parlando anche all'interno del linguaggio oggetto.
+-- Quello che succede nel paper di Mendler è che lui introduce nel linguaggio oggetto anche delle costanti non interpretate, di cui da delle regole di valutazione a parte.
+
+-- Potrei fare questo in quello che sto cercando di costruire?
+-- In altre parole, la domanda è: non è che le costanti dovrebbero essere riportate all'interno del linguaggio di basso livello, invece di essere tradotte con $fix$?
+
+-- Credo che il punto sia questo: alla fine quando parlavo degli schemi ricorsivi anche io usavo il punto fisso per encodare gli schemi di ricorsione.
+-- Almeno però avevo una presentazione finita del termine, che potevo per esempio usare come mezzo per scrivere l'uguaglianza.
+-- Con i tipi di dati coinduttivi purtroppo i termini stessi sono definiti con il combinatore di punto fisso.
+-- Il problema è che a quel punto non posso nemmeno paragonarli per uguaglianza, mentre a volte lo sono chiaramente.
+-- Forse questo dipende dal fatto che le funzioni sono codata?
+
+-- ** Domanda sui dati coinduttivi.
+-- A questo punto la domanda è: si tratta di una cosa inevitabile? Ovvero, ~i tipi di dati coinduttivi devono essere espressi con fix~?
+-- Questo vorrebbe dire che in effetti l'unico modo di compararli è la bisimulazione.
+
+-- Un modo per rispondere a questa questione potrebbe essere cercare di scrivere effettivamente un termine coinduttivo nel framework di Mendler.
+
+-- Anche capire meglio come funzionano gli operatori di ricorsione potrebbe giovare.
 
 -- * Case studies
 -- ** Case study: la funzione (*2)
