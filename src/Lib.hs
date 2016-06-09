@@ -14,6 +14,7 @@ module Lib
     , reductions
     , nReductions
     , (===)
+    , Term
     ) where
 
 import Prelude hiding ((^))
